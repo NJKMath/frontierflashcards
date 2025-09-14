@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pokémon Moveset Flashcards</title>
+    <title>PokÃ©mon Moveset Flashcards</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
@@ -125,7 +125,7 @@
     <div class="flashcard hidden" id="flashcard" onclick="flipCard()">
         <div class="card-inner">
             <div class="card-front">
-                <img id="pokemon-image" class="pokemon-image hidden" src="" alt="Pokémon">
+                <img id="pokemon-image" class="pokemon-image hidden" src="" alt="PokÃ©mon">
                 <div class="pokemon-name" id="front-name"></div>
                 <div class="set-number" id="front-set"></div>
             </div>
@@ -162,9 +162,9 @@
         window.onload = async function() {
             console.log('Base URL:', window.location.origin);
             console.log('Attempting to load:');
-            console.log('- JSON: /move_types.json');
-            console.log('- CSV: /pokemondata.csv');
-            console.log('- ZIP: /pokemon_sprites_centered.zip');
+            console.log('- JSON: move_types.json');
+            console.log('- CSV: pokemondata.csv');
+            console.log('- ZIP: pokemon_sprites_centered.zip');
 
             try {
                 // Try to load move_types.json, but continue if it fails
@@ -185,8 +185,8 @@
         };
 
         async function loadMoveTypes() {
-            const url = '/move_types.json';
-            console.log(`Fetching ${url} (Full URL: ${window.location.origin}${url})`);
+            const url = 'move_types.json';
+            console.log(`Fetching ${url} (Full URL: ${window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1)}${url})`);
             const response = await fetch(url, { cache: 'no-cache' });
             if (!response.ok) {
                 const errorText = await response.text();
@@ -198,8 +198,8 @@
 
         async function loadCSV() {
             try {
-                const url = '/pokemondata.csv';
-                console.log(`Fetching ${url} (Full URL: ${window.location.origin}${url})`);
+                const url = 'pokemondata.csv';
+                console.log(`Fetching ${url} (Full URL: ${window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1)}${url})`);
                 const response = await new Promise((resolve, reject) => {
                     Papa.parse(url, {
                         download: true,
@@ -253,8 +253,8 @@
 
         async function loadImages() {
             try {
-                const url = '/pokemon_sprites_centered.zip';
-                console.log(`Fetching ${url} (Full URL: ${window.location.origin}${url})`);
+                const url = 'pokemon_sprites_centered.zip';
+                console.log(`Fetching ${url} (Full URL: ${window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1)}${url})`);
                 const response = await fetch(url, { cache: 'no-cache' });
                 if (!response.ok) {
                     const errorText = await response.text();
@@ -284,7 +284,7 @@
                 });
 
                 await Promise.all(promises);
-                console.log('Loaded Pokémon images:', Object.keys(pokemonImages).length, 'files', 'Sample:', Object.keys(pokemonImages).slice(0, 5));
+                console.log('Loaded PokÃ©mon images:', Object.keys(pokemonImages).length, 'files', 'Sample:', Object.keys(pokemonImages).slice(0, 5));
                 console.log('Loaded type images:', Object.keys(typeImages).length, 'files', 'Sample:', Object.keys(typeImages));
                 displayCard(currentCardIndex); // Refresh to show images
             } catch (error) {
