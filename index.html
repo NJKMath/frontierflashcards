@@ -183,13 +183,18 @@
 
         // Load CSV and images automatically on page load
         window.onload = async function() {
-            await Promise.all([loadCSV(), loadImages()]);
+            try {
+                await Promise.all([loadCSV(), loadImages()]);
+            } catch (error) {
+                document.getElementById('error-message').textContent = 'Initialization error: ' + error.message;
+                console.error('Initialization error:', error);
+            }
         };
 
         async function loadCSV() {
             try {
                 const response = await fetch('/pokemondata.csv');
-                if (!response.ok) throw new Error('Failed to load pokemondata.csv');
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 const data = await response.text();
                 const rows = data.split('\n').slice(1); // Skip header
                 flashcardsData = rows.map(row => {
@@ -220,13 +225,14 @@
                 }
             } catch (error) {
                 document.getElementById('error-message').textContent = 'Error loading CSV: ' + error.message;
+                console.error('CSV fetch error:', error);
             }
         }
 
         async function loadImages() {
             try {
-                const response = await fetch('/images.zip');
-                if (!response.ok) throw new Error('Failed to load images.zip');
+                const response = await fetch('/pokemon_sprites_centered.zip');
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 const arrayBuffer = await response.arrayBuffer();
                 const zip = await JSZip.loadAsync(arrayBuffer);
                 pokemonImages = {};
@@ -255,6 +261,7 @@
                 displayCard(currentCardIndex); // Refresh card to show images
             } catch (error) {
                 document.getElementById('error-message').textContent = 'Error loading images: ' + error.message;
+                console.error('Images fetch error:', error);
             }
         }
 
