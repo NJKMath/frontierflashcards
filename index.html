@@ -162,15 +162,21 @@
         window.onload = async function() {
             console.log('Base URL:', window.location.origin);
             console.log('Attempting to load:');
+            console.log('- JSON: /move_types.json');
             console.log('- CSV: /pokemondata.csv');
             console.log('- ZIP: /pokemon_sprites_centered.zip');
-            console.log('- JSON: /move_types.json');
+
             try {
-                // Load move types first, as they're needed for image categorization
-                await loadMoveTypes();
+                // Try to load move_types.json, but continue if it fails
+                try {
+                    await loadMoveTypes();
+                } catch (error) {
+                    console.warn('Move types failed to load, continuing without type icons:', error);
+                    document.getElementById('error-message').textContent = `Warning: Failed to load move types (${error.message})`;
+                }
                 // Load CSV and images in parallel
                 await Promise.all([loadCSV(), loadImages()]);
-                console.log('All data loaded successfully');
+                console.log('Data loading completed');
             } catch (error) {
                 const errorMsg = `Initialization error: ${error.message}`;
                 document.getElementById('error-message').textContent = errorMsg;
@@ -179,21 +185,23 @@
         };
 
         async function loadMoveTypes() {
-            console.log('Fetching /move_types.json');
-            const response = await fetch('/move_types.json', { cache: 'no-cache' });
+            const url = '/move_types.json';
+            console.log(`Fetching ${url} (Full URL: ${window.location.origin}${url})`);
+            const response = await fetch(url, { cache: 'no-cache' });
             if (!response.ok) {
                 const errorText = await response.text();
-                throw new Error(`Failed to load move_types.json - HTTP ${response.status}: ${response.statusText} - ${errorText.substring(0, 100)}...`);
+                throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText.substring(0, 100)}...`);
             }
             moveToType = await response.json();
-            console.log('Loaded move types:', Object.keys(moveToType).length, 'entries');
+            console.log('Loaded move types:', Object.keys(moveToType).length, 'entries', 'Sample:', Object.entries(moveToType).slice(0, 2));
         }
 
         async function loadCSV() {
             try {
-                console.log('Fetching /pokemondata.csv');
+                const url = '/pokemondata.csv';
+                console.log(`Fetching ${url} (Full URL: ${window.location.origin}${url})`);
                 const response = await new Promise((resolve, reject) => {
-                    Papa.parse('/pokemondata.csv', {
+                    Papa.parse(url, {
                         download: true,
                         header: true,
                         skipEmptyLines: true,
@@ -239,23 +247,25 @@
                 const errorMsg = `Error loading CSV: ${error.message}`;
                 document.getElementById('error-message').textContent = errorMsg;
                 console.error(errorMsg, error);
-                throw error; // Rethrow to halt initialization
+                throw error; // Stop if CSV fails
             }
         }
 
         async function loadImages() {
             try {
-                console.log('Fetching /pokemon_sprites_centered.zip');
-                const response = await fetch('/pokemon_sprites_centered.zip', { cache: 'no-cache' });
+                const url = '/pokemon_sprites_centered.zip';
+                console.log(`Fetching ${url} (Full URL: ${window.location.origin}${url})`);
+                const response = await fetch(url, { cache: 'no-cache' });
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`Failed to load pokemon_sprites_centered.zip - HTTP ${response.status}: ${response.statusText} - ${errorText.substring(0, 100)}...`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText.substring(0, 100)}...`);
                 }
                 const arrayBuffer = await response.arrayBuffer();
                 const zip = await JSZip.loadAsync(arrayBuffer);
                 pokemonImages = {};
                 typeImages = {};
                 const promises = [];
+                // Use moveToType if available, else empty set to avoid type image assignments
                 const knownTypes = new Set(Object.values(moveToType).map(type => type.toLowerCase()));
 
                 zip.forEach((relativePath, zipEntry) => {
@@ -275,13 +285,13 @@
 
                 await Promise.all(promises);
                 console.log('Loaded Pokémon images:', Object.keys(pokemonImages).length, 'files', 'Sample:', Object.keys(pokemonImages).slice(0, 5));
-                console.log('Loaded type images:', Object.keys(typeImages).length, 'files', Object.keys(typeImages));
+                console.log('Loaded type images:', Object.keys(typeImages).length, 'files', 'Sample:', Object.keys(typeImages));
                 displayCard(currentCardIndex); // Refresh to show images
             } catch (error) {
                 const errorMsg = `Error loading images: ${error.message}`;
                 document.getElementById('error-message').textContent += ` (${errorMsg})`;
                 console.error(errorMsg, error);
-                throw error; // Rethrow to halt initialization
+                throw error; // Stop if images fail
             }
         }
 
@@ -351,7 +361,7 @@
                     li.appendChild(img);
                 } else if (type) {
                     console.warn(`No type image for move: ${move}, type: ${type}`);
-                } else {
+                } else if (moveToType[move] === undefined) {
                     console.warn(`No type defined for move: ${move}`);
                 }
                 li.appendChild(document.createTextNode(move));
