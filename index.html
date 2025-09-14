@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pokémon Moveset Flashcards</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding-top: 50px;
+            background-color: #f0f0f0;
+        }
+        .flashcard {
+            width: 300px;
+            height: 400px;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+        .card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flashcard.flipped .card-inner {
+            transform: rotateY(180deg);
+        }
+        .card-front, .card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .card-front {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .card-back {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            transform: rotateY(180deg);
+        }
+        .pokemon-name {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        .set-number {
+            font-size: 1.2em;
+            opacity: 0.8;
+        }
+        .pokemon-image {
+            max-width: 150px;
+            max-height: 150px;
+            margin-bottom: 10px;
+        }
+        .moves-list {
+            list-style: none;
+            padding: 0;
+            width: 100%;
+        }
+        .moves-list li {
+            font-size: 1.1em;
+            margin: 5px 0;
+            padding: 5px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .type-icon {
+            width: 24px;
+            height: 24px;
+        }
+        .file-upload {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        .controls {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+        }
+        .round-selector {
+            margin: 10px 0;
+        }
+        button, input[type="file"], select {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 5px;
+            background: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover, input[type="file"]:hover, select:hover {
+            background: #45a049;
+        }
+        .error {
+            color: red;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .flashcard.hidden, .controls.hidden, .round-selector.hidden, .pokemon-image.hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="file-upload">
+        <input type="file" id="csvFileInput" accept=".csv" onchange="loadCSV()">
+        <label for="csvFileInput">Upload Pokémon CSV</label>
+        <input type="file" id="zipFileInput" accept=".zip" onchange="loadImages()">
+        <label for="zipFileInput">Upload Images ZIP</label>
+    </div>
+    <div class="flashcard hidden" id="flashcard" onclick="flipCard()">
+        <div class="card-inner">
+            <div class="card-front">
+                <img id="pokemon-image" class="pokemon-image hidden" src="" alt="Pokémon">
+                <div class="pokemon-name" id="front-name"></div>
+                <div class="set-number" id="front-set"></div>
+            </div>
+            <div class="card-back">
+                <ul class="moves-list" id="back-moves"></ul>
+            </div>
+        </div>
+    </div>
+    <div class="controls hidden" id="controls">
+        <button onclick="prevCard()">Previous</button>
+        <button onclick="nextCard()">Next</button>
+        <button onclick="flipCard()">Flip</button>
+    </div>
+    <div class="round-selector hidden" id="round-selector">
+        <select id="round-select" onchange="filterByRound()">
+            <option value="all">Round 5+</option>
+            <option value="1">Round 1</option>
+            <option value="2">Round 2</option>
+            <option value="3">Round 3</option>
+            <option value="4">Round 4</option>
+        </select>
+    </div>
+    <div class="error" id="error-message"></div>
+
+    <script>
+        let flashcardsData = [];
+        let filteredFlashcards = [];
+        let currentCardIndex = 0;
+        let pokemonImages = {};
+        let typeImages = {};
+
+        // Sample move-to-type mapping (expand as needed)
+        const moveToType = {
+            "Hyper Beam": "Normal",
+            "Earthquake": "Ground",
+            "Aerial Ace": "Flying",
+            "AncientPower": "Rock",
+            "Double-Edge": "Normal",
+            "Rock Slide": "Rock",
+            "Fire Blast": "Fire",
+            "Dragon Claw": "Dragon",
+            "Bite": "Dark",
+            "Iron Tail": "Steel",
+            "Focus Punch": "Fighting",
+            "Thunder Wave": "Electric",
+            "Surf": "Water",
+            "Thunder": "Electric",
+            "Blizzard": "Ice",
+            "ThunderPunch": "Electric",
+            "Fire Punch": "Fire",
+            "Ice Punch": "Ice",
+            "Psychic": "Psychic",
+            "Calm Mind": "Psychic",
+            "Recover": "Normal"
+            // Add more moves as needed
+        };
+
+        function loadCSV() {
+            const fileInput = document.getElementById('csvFileInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                document.getElementById('error-message').textContent = 'Please select a CSV file';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = e.target.result;
+                    const rows = data.split('\n').slice(1); // Skip header
+                    flashcardsData = rows.map(row => {
+                        const cols = row.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                        return {
+                            species: cols[1] ? cols[1].replace(/"/g, '').trim() : '',
+                            set: cols[2] ? cols[2].replace(/"/g, '').trim() : '',
+                            round5Plus: cols[11] ? cols[11].replace(/"/g, '').trim().toLowerCase() : '',
+                            moves: [
+                                cols[5] ? cols[5].replace(/"/g, '').trim() : '',
+                                cols[6] ? cols[6].replace(/"/g, '').trim() : '',
+                                cols[7] ? cols[7].replace(/"/g, '').trim() : '',
+                                cols[8] ? cols[8].replace(/"/g, '').trim() : ''
+                            ].filter(move => move)
+                        };
+                    }).filter(card => card.species && card.set && card.moves.length > 0);
+
+                    if (flashcardsData.length > 0) {
+                        filteredFlashcards = flashcardsData;
+                        currentCardIndex = 0;
+                        document.getElementById('flashcard').classList.remove('hidden');
+                        document.getElementById('controls').classList.remove('hidden');
+                        document.getElementById('round-selector').classList.remove('hidden');
+                        document.getElementById('error-message').textContent = '';
+                        displayCard(currentCardIndex);
+                    } else {
+                        document.getElementById('error-message').textContent = 'No valid data found in CSV';
+                    }
+                } catch (error) {
+                    document.getElementById('error-message').textContent = 'Error parsing CSV file';
+                }
+            };
+            reader.onerror = function() {
+                document.getElementById('error-message').textContent = 'Error reading CSV file';
+            };
+            reader.readAsText(file);
+        }
+
+        function loadImages() {
+            const fileInput = document.getElementById('zipFileInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                document.getElementById('error-message').textContent = 'Please select a ZIP file';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                try {
+                    const zip = await JSZip.loadAsync(e.target.result);
+                    pokemonImages = {};
+                    typeImages = {};
+                    const promises = [];
+
+                    // Define known type names for categorization
+                    const knownTypes = Object.values(moveToType).map(type => type.toLowerCase());
+                    zip.forEach((relativePath, zipEntry) => {
+                        if (!zipEntry.dir && /\.(png|jpg|jpeg)$/i.test(zipEntry.name)) {
+                            promises.push(zipEntry.async('blob').then(blob => {
+                                const fileName = zipEntry.name.split('/').pop();
+                                const baseName = fileName.replace(/\.(png|jpg|jpeg)$/i, '').toLowerCase();
+                                const url = URL.createObjectURL(blob);
+                                if (knownTypes.includes(baseName)) {
+                                    typeImages[baseName] = url;
+                                } else {
+                                    pokemonImages[baseName] = url;
+                                }
+                            }));
+                        }
+                    });
+
+                    await Promise.all(promises);
+                    console.log('Pokemon Images:', pokemonImages); // Debug
+                    console.log('Type Images:', typeImages); // Debug
+                    displayCard(currentCardIndex); // Refresh card to show images
+                } catch (error) {
+                    document.getElementById('error-message').textContent = 'Error processing ZIP file';
+                }
+            };
+            reader.onerror = function() {
+                document.getElementById('error-message').textContent = 'Error reading ZIP file';
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function filterByRound() {
+            const round = document.getElementById('round-select').value;
+            if (round === 'all') {
+                filteredFlashcards = flashcardsData;
+            } else {
+                filteredFlashcards = flashcardsData.filter(card => 
+                    card.set === round && card.round5Plus === 'no'
+                );
+            }
+            currentCardIndex = 0;
+            document.getElementById('flashcard').classList.remove('flipped');
+            if (filteredFlashcards.length > 0) {
+                displayCard(currentCardIndex);
+                document.getElementById('error-message').textContent = '';
+                document.getElementById('flashcard').classList.remove('hidden');
+                document.getElementById('controls').classList.remove('hidden');
+            } else {
+                document.getElementById('error-message').textContent = `No cards found for Round ${round}`;
+                document.getElementById('flashcard').classList.add('hidden');
+                document.getElementById('controls').classList.add('hidden');
+            }
+        }
+
+        function displayCard(index) {
+            const card = filteredFlashcards[index];
+            if (!card) return;
+
+            // Update front
+            document.getElementById('front-name').textContent = card.species;
+            document.getElementById('front-set').textContent = `Set #${card.set}`;
+            const pokemonImage = document.getElementById('pokemon-image');
+            const speciesKey = card.species.toLowerCase().replace(/\s+/g, ''); // Handle spaces
+            console.log('Displaying card for species:', speciesKey, 'Image URL:', pokemonImages[speciesKey]); // Debug
+            if (pokemonImages[speciesKey]) {
+                pokemonImage.src = pokemonImages[speciesKey];
+                pokemonImage.classList.remove('hidden');
+            } else {
+                pokemonImage.classList.add('hidden');
+            }
+
+            // Update back
+            const movesList = document.getElementById('back-moves');
+            movesList.innerHTML = '';
+            card.moves.forEach(move => {
+                const li = document.createElement('li');
+                const type = moveToType[move] ? moveToType[move].toLowerCase() : '';
+                if (type && typeImages[type]) {
+                    const img = document.createElement('img');
+                    img.src = typeImages[type];
+                    img.className = 'type-icon';
+                    img.alt = type;
+                    li.appendChild(img);
+                }
+                li.appendChild(document.createTextNode(move));
+                movesList.appendChild(li);
+            });
+        }
+
+        function flipCard() {
+            document.getElementById('flashcard').classList.toggle('flipped');
+        }
+
+        function nextCard() {
+            if (currentCardIndex < filteredFlashcards.length - 1) {
+                document.getElementById('flashcard').classList.remove('flipped');
+                setTimeout(() => {
+                    currentCardIndex++;
+                    displayCard(currentCardIndex);
+                }, 600);
+            }
+        }
+
+        function prevCard() {
+            if (currentCardIndex > 0) {
+                document.getElementById('flashcard').classList.remove('flipped');
+                setTimeout(() => {
+                    currentCardIndex--;
+                    displayCard(currentCardIndex);
+                }, 600);
+            }
+        }
+    </script>
+</body>
+</html>
