@@ -194,7 +194,10 @@
         async function loadCSV() {
             try {
                 const response = await fetch('/pokemondata.csv');
-                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+                }
                 const data = await response.text();
                 const rows = data.split('\n').slice(1); // Skip header
                 flashcardsData = rows.map(row => {
@@ -232,7 +235,10 @@
         async function loadImages() {
             try {
                 const response = await fetch('/pokemon_sprites_centered.zip');
-                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+                }
                 const arrayBuffer = await response.arrayBuffer();
                 const zip = await JSZip.loadAsync(arrayBuffer);
                 pokemonImages = {};
