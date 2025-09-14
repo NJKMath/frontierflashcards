@@ -230,6 +230,10 @@
                     }))
                     .filter(card => card.species && card.set && card.moves.length > 0);
 
+                // Debug: log the actual headers and first few rows
+                console.log('CSV headers:', response.meta.fields);
+                console.log('First 3 raw rows:', response.data.slice(0, 3));
+                
                 console.log('Parsed CSV:', flashcardsData.length, 'valid cards', 'Sample:', flashcardsData.slice(0, 2));
 
                 if (flashcardsData.length > 0) {
