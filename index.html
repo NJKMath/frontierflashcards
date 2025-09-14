@@ -183,6 +183,9 @@
 
         // Load CSV and images automatically on page load
         window.onload = async function() {
+            console.log('Attempting to load files from:');
+            console.log('CSV: https://njkmath.github.io/frontierflashcards/pokemondata.csv');
+            console.log('ZIP: https://njkmath.github.io/frontierflashcards/pokemon_sprites_centered.zip');
             try {
                 await Promise.all([loadCSV(), loadImages()]);
             } catch (error) {
@@ -193,10 +196,11 @@
 
         async function loadCSV() {
             try {
+                console.log('Fetching CSV from /pokemondata.csv');
                 const response = await fetch('/pokemondata.csv');
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText.substring(0, 100)}...`);
                 }
                 const data = await response.text();
                 const rows = data.split('\n').slice(1); // Skip header
@@ -234,10 +238,11 @@
 
         async function loadImages() {
             try {
+                console.log('Fetching ZIP from /pokemon_sprites_centered.zip');
                 const response = await fetch('/pokemon_sprites_centered.zip');
                 if (!response.ok) {
                     const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText}`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText.substring(0, 100)}...`);
                 }
                 const arrayBuffer = await response.arrayBuffer();
                 const zip = await JSZip.loadAsync(arrayBuffer);
