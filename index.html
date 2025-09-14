@@ -216,26 +216,13 @@
                     });
                 });
 
-                flashcardsData = response.data
-                    .map(row => ({
-                        species: (row['Species'] || '').trim(),
-                        set: (row['Set'] || '').trim(),
-                        round5Plus: (row['Round5Plus'] || '').trim().toLowerCase(),
-                        moves: [
-                            (row['Move1'] || '').trim(),
-                            (row['Move2'] || '').trim(),
-                            (row['Move3'] || '').trim(),
-                            (row['Move4'] || '').trim()
-                        ].filter(move => move)
-                    }))
-                    .filter(card => card.species && card.set && card.moves.length > 0);
-
                 // Debug: log the actual headers and first few rows
                 console.log('CSV headers:', response.meta.fields);
                 console.log('First 3 raw rows:', response.data.slice(0, 3));
+                console.log('Total rows in CSV:', response.data.length);
                 
-                // Debug: log what happens during parsing
-                const debugData = response.data.slice(0, 3).map(row => ({
+                // Debug the mapping process
+                const mappedData = response.data.map(row => ({
                     species: (row['Species'] || '').trim(),
                     set: (row['Set#'] || '').trim(),
                     round5Plus: (row['Round 5+ Only'] || '').trim().toLowerCase(),
@@ -246,14 +233,22 @@
                         (row['Move 4'] || '').trim()
                     ].filter(move => move)
                 }));
-                console.log('Parsed sample data:', debugData);
                 
-                // Check what's failing the filter
-                debugData.forEach((card, i) => {
-                    console.log(`Row ${i}: species="${card.species}" set="${card.set}" moves=${card.moves.length} passes=${card.species && card.set && card.moves.length > 0}`);
-                });
+                console.log('After mapping:', mappedData.length, 'cards');
+                console.log('Sample mapped data:', mappedData.slice(0, 2));
                 
-                console.log('Parsed CSV:', flashcardsData.length, 'valid cards', 'Sample:', flashcardsData.slice(0, 2));
+                flashcardsData = mappedData.filter(card => card.species && card.set && card.moves.length > 0);
+                
+                console.log('After filtering:', flashcardsData.length, 'valid cards');
+                
+                // Check why cards might be filtered out
+                const failedCards = mappedData.filter(card => !(card.species && card.set && card.moves.length > 0));
+                console.log('Failed cards:', failedCards.length);
+                if (failedCards.length > 0) {
+                    console.log('Sample failed card:', failedCards[0]);
+                }
+                
+                console.log('Final result:', flashcardsData.length, 'valid cards', 'Sample:', flashcardsData.slice(0, 2));
 
                 if (flashcardsData.length > 0) {
                     filteredFlashcards = flashcardsData;
