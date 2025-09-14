@@ -234,6 +234,25 @@
                 console.log('CSV headers:', response.meta.fields);
                 console.log('First 3 raw rows:', response.data.slice(0, 3));
                 
+                // Debug: log what happens during parsing
+                const debugData = response.data.slice(0, 3).map(row => ({
+                    species: (row['Species'] || '').trim(),
+                    set: (row['Set#'] || '').trim(),
+                    round5Plus: (row['Round 5+ Only'] || '').trim().toLowerCase(),
+                    moves: [
+                        (row['Move 1'] || '').trim(),
+                        (row['Move 2'] || '').trim(),
+                        (row['Move 3'] || '').trim(),
+                        (row['Move 4'] || '').trim()
+                    ].filter(move => move)
+                }));
+                console.log('Parsed sample data:', debugData);
+                
+                // Check what's failing the filter
+                debugData.forEach((card, i) => {
+                    console.log(`Row ${i}: species="${card.species}" set="${card.set}" moves=${card.moves.length} passes=${card.species && card.set && card.moves.length > 0}`);
+                });
+                
                 console.log('Parsed CSV:', flashcardsData.length, 'valid cards', 'Sample:', flashcardsData.slice(0, 2));
 
                 if (flashcardsData.length > 0) {
