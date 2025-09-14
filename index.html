@@ -80,7 +80,7 @@
         .moves-list li {
             font-size: 1.1em;
             margin: 5px 0;
-            padding: 5px;
+            padding: 5px 10px;
             background: rgba(255,255,255,0.2);
             border-radius: 5px;
             display: flex;
@@ -90,6 +90,7 @@
         .type-icon {
             width: 24px;
             height: 24px;
+            flex-shrink: 0;
         }
         .controls {
             margin: 20px 0;
@@ -116,12 +117,19 @@
             text-align: center;
             margin-top: 20px;
         }
+        .loading {
+            color: #666;
+            text-align: center;
+            margin-top: 20px;
+        }
         .flashcard.hidden, .controls.hidden, .round-selector.hidden, .pokemon-image.hidden {
             display: none;
         }
     </style>
 </head>
 <body>
+    <div class="loading" id="loading-message">Loading flashcards...</div>
+    
     <div class="flashcard hidden" id="flashcard" onclick="flipCard()">
         <div class="card-inner">
             <div class="card-front">
@@ -157,160 +165,206 @@
         let pokemonImages = {};
         let typeImages = {};
         let moveToType = {};
+        let pokemonZip = null;
 
         // Load all data on page load
         window.onload = async function() {
             console.log('Base URL:', window.location.origin);
-            console.log('Attempting to load:');
-            console.log('- JSON: move_types.json');
-            console.log('- CSV: pokemondata.csv');
-            console.log('- ZIP: pokemon_sprites_centered.zip');
+            updateLoadingMessage('Loading move types and CSV data...');
 
             try {
-                // Try to load move_types.json, but continue if it fails
-                try {
-                    await loadMoveTypes();
-                } catch (error) {
-                    console.warn('Move types failed to load, continuing without type icons:', error);
-                    document.getElementById('error-message').textContent = `Warning: Failed to load move types (${error.message})`;
+                // Load essential data first (move types and CSV)
+                await Promise.all([
+                    loadMoveTypes().catch(error => {
+                        console.warn('Move types failed to load:', error);
+                        document.getElementById('error-message').textContent = `Warning: Failed to load move types`;
+                    }),
+                    loadCSV()
+                ]);
+                
+                // Load type images (small, fast)
+                updateLoadingMessage('Loading type icons...');
+                await loadTypeImages();
+                
+                // Start displaying cards immediately with type icons
+                if (flashcardsData.length > 0) {
+                    filteredFlashcards = flashcardsData;
+                    currentCardIndex = 0;
+                    showInterface();
+                    displayCard(currentCardIndex);
                 }
-                // Load CSV and images in parallel
-                await Promise.all([loadCSV(), loadImages()]);
-                console.log('Data loading completed');
+                
+                // Load Pokemon images in background (slower)
+                updateLoadingMessage('Loading Pokemon images in background...');
+                loadPokemonImages(); // Don't await - let it load in background
+                
+                console.log('Initial loading completed');
+                document.getElementById('loading-message').style.display = 'none';
+                
             } catch (error) {
                 const errorMsg = `Initialization error: ${error.message}`;
                 document.getElementById('error-message').textContent = errorMsg;
+                document.getElementById('loading-message').style.display = 'none';
                 console.error(errorMsg, error);
             }
         };
 
+        function updateLoadingMessage(message) {
+            document.getElementById('loading-message').textContent = message;
+        }
+
+        function showInterface() {
+            document.getElementById('flashcard').classList.remove('hidden');
+            document.getElementById('controls').classList.remove('hidden');
+            document.getElementById('round-selector').classList.remove('hidden');
+            document.getElementById('error-message').textContent = '';
+        }
+
         async function loadMoveTypes() {
             const url = 'move_types.json';
-            console.log(`Fetching ${url} (Full URL: ${window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1)}${url})`);
+            console.log(`Fetching ${url}`);
             const response = await fetch(url, { cache: 'no-cache' });
             if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText.substring(0, 100)}...`);
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
             moveToType = await response.json();
-            console.log('Loaded move types:', Object.keys(moveToType).length, 'entries', 'Sample:', Object.entries(moveToType).slice(0, 2));
+            console.log('Loaded move types:', Object.keys(moveToType).length, 'entries');
         }
 
         async function loadCSV() {
-            try {
-                const url = 'pokemondata.csv';
-                console.log(`Fetching ${url} (Full URL: ${window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1)}${url})`);
-                const response = await new Promise((resolve, reject) => {
-                    Papa.parse(url, {
-                        download: true,
-                        header: true,
-                        skipEmptyLines: true,
-                        complete: (result) => {
-                            if (result.errors.length > 0) {
-                                reject(new Error(`PapaParse errors: ${result.errors.map(e => e.message).join('; ')}`));
-                            } else {
-                                resolve(result);
-                            }
-                        },
-                        error: (error) => reject(error)
-                    });
+            const url = 'pokemondata.csv';
+            console.log(`Fetching ${url}`);
+            const response = await new Promise((resolve, reject) => {
+                Papa.parse(url, {
+                    download: true,
+                    header: true,
+                    skipEmptyLines: true,
+                    complete: (result) => {
+                        if (result.errors.length > 0) {
+                            reject(new Error(`PapaParse errors: ${result.errors.map(e => e.message).join('; ')}`));
+                        } else {
+                            resolve(result);
+                        }
+                    },
+                    error: (error) => reject(error)
                 });
+            });
 
-                // Debug: log the actual headers and first few rows
-                console.log('CSV headers:', response.meta.fields);
-                console.log('First 3 raw rows:', response.data.slice(0, 3));
-                console.log('Total rows in CSV:', response.data.length);
-                
-                // Debug the mapping process
-                const mappedData = response.data.map(row => ({
-                    species: (row['Species'] || '').trim(),
-                    set: (row['Set#'] || '').trim(),
-                    round5Plus: (row['Round 5+ Only'] || '').trim().toLowerCase(),
-                    moves: [
-                        (row['Move 1'] || '').trim(),
-                        (row['Move 2'] || '').trim(),
-                        (row['Move 3'] || '').trim(),
-                        (row['Move 4'] || '').trim()
-                    ].filter(move => move)
-                }));
-                
-                console.log('After mapping:', mappedData.length, 'cards');
-                console.log('Sample mapped data:', mappedData.slice(0, 2));
-                
-                flashcardsData = mappedData.filter(card => card.species && card.set && card.moves.length > 0);
-                
-                console.log('After filtering:', flashcardsData.length, 'valid cards');
-                
-                // Check why cards might be filtered out
-                const failedCards = mappedData.filter(card => !(card.species && card.set && card.moves.length > 0));
-                console.log('Failed cards:', failedCards.length);
-                if (failedCards.length > 0) {
-                    console.log('Sample failed card:', failedCards[0]);
-                }
-                
-                console.log('Final result:', flashcardsData.length, 'valid cards', 'Sample:', flashcardsData.slice(0, 2));
+            console.log('Total rows in CSV:', response.data.length);
+            
+            const mappedData = response.data.map(row => ({
+                species: (row['Species'] || '').trim(),
+                set: (row['Set#'] || '').trim(),
+                round5Plus: (row['Round 5+ Only'] || '').trim().toLowerCase(),
+                moves: [
+                    (row['Move 1'] || '').trim(),
+                    (row['Move 2'] || '').trim(),
+                    (row['Move 3'] || '').trim(),
+                    (row['Move 4'] || '').trim()
+                ].filter(move => move)
+            }));
+            
+            flashcardsData = mappedData.filter(card => card.species && card.set && card.moves.length > 0);
+            console.log('Loaded', flashcardsData.length, 'valid flashcards');
 
-                if (flashcardsData.length > 0) {
-                    filteredFlashcards = flashcardsData;
-                    currentCardIndex = 0;
-                    document.getElementById('flashcard').classList.remove('hidden');
-                    document.getElementById('controls').classList.remove('hidden');
-                    document.getElementById('round-selector').classList.remove('hidden');
-                    document.getElementById('error-message').textContent = '';
-                    displayCard(currentCardIndex);
-                } else {
-                    document.getElementById('error-message').textContent = 'No valid data found in CSV';
-                }
-            } catch (error) {
-                const errorMsg = `Error loading CSV: ${error.message}`;
-                document.getElementById('error-message').textContent = errorMsg;
-                console.error(errorMsg, error);
-                throw error; // Stop if CSV fails
+            if (flashcardsData.length === 0) {
+                throw new Error('No valid data found in CSV');
             }
         }
 
-        async function loadImages() {
+        async function loadTypeImages() {
             try {
-                const url = 'pokemon_sprites_centered.zip';
-                console.log(`Fetching ${url} (Full URL: ${window.location.href.substring(0, window.location.href.lastIndexOf('/') + 1)}${url})`);
+                const url = 'types.zip';
+                console.log(`Fetching ${url}`);
                 const response = await fetch(url, { cache: 'no-cache' });
                 if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${response.statusText} - ${errorText.substring(0, 100)}...`);
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
                 }
                 const arrayBuffer = await response.arrayBuffer();
                 const zip = await JSZip.loadAsync(arrayBuffer);
-                pokemonImages = {};
-                typeImages = {};
+                
                 const promises = [];
-                // Use moveToType if available, else empty set to avoid type image assignments
-                const knownTypes = new Set(Object.values(moveToType).map(type => type.toLowerCase()));
-
                 zip.forEach((relativePath, zipEntry) => {
                     if (!zipEntry.dir && /\.(png|jpg|jpeg)$/i.test(zipEntry.name)) {
                         promises.push(zipEntry.async('blob').then(blob => {
                             const fileName = zipEntry.name.split('/').pop();
-                            const baseName = fileName.replace(/\.(png|jpg|jpeg)$/i, '').toLowerCase();
+                            const typeName = fileName.replace(/\.(png|jpg|jpeg)$/i, '').toLowerCase();
                             const url = URL.createObjectURL(blob);
-                            if (knownTypes.has(baseName)) {
-                                typeImages[baseName] = url;
-                            } else {
-                                pokemonImages[baseName] = url;
-                            }
+                            typeImages[typeName] = url;
                         }));
                     }
                 });
 
                 await Promise.all(promises);
-                console.log('Loaded PokÃ©mon images:', Object.keys(pokemonImages).length, 'files', 'Sample:', Object.keys(pokemonImages).slice(0, 5));
-                console.log('Loaded type images:', Object.keys(typeImages).length, 'files', 'Sample:', Object.keys(typeImages));
-                displayCard(currentCardIndex); // Refresh to show images
+                console.log('Loaded type images:', Object.keys(typeImages).length, 'files');
+                
+                // Refresh current card to show type icons
+                if (filteredFlashcards.length > 0) {
+                    displayCard(currentCardIndex);
+                }
             } catch (error) {
-                const errorMsg = `Error loading images: ${error.message}`;
-                document.getElementById('error-message').textContent += ` (${errorMsg})`;
-                console.error(errorMsg, error);
-                throw error; // Stop if images fail
+                console.warn('Failed to load type images:', error);
             }
+        }
+
+        async function loadPokemonImages() {
+            try {
+                const url = 'pokemon_sprites_centered.zip';
+                console.log(`Loading Pokemon images from ${url}`);
+                const response = await fetch(url, { cache: 'no-cache' });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const arrayBuffer = await response.arrayBuffer();
+                pokemonZip = await JSZip.loadAsync(arrayBuffer);
+                
+                console.log('Pokemon images loaded, extracting lazily as needed');
+                
+                // Refresh current card to show Pokemon image
+                if (filteredFlashcards.length > 0) {
+                    displayCard(currentCardIndex);
+                }
+            } catch (error) {
+                console.warn('Failed to load Pokemon images:', error);
+            }
+        }
+
+        async function getPokemonImage(species) {
+            if (!pokemonZip) return null;
+            
+            const normalizedSpecies = species.toLowerCase().replace(/[^a-z0-9]/g, '');
+            
+            // Check if we already have this image cached
+            if (pokemonImages[normalizedSpecies]) {
+                return pokemonImages[normalizedSpecies];
+            }
+            
+            // Try to find the image in the zip
+            const possibleNames = [
+                normalizedSpecies + '.png',
+                normalizedSpecies + '.jpg',
+                normalizedSpecies + '.jpeg',
+                species.toLowerCase().replace(/\s+/g, '') + '.png',
+                species.toLowerCase().replace(/\s+/g, '') + '.jpg'
+            ];
+            
+            for (const name of possibleNames) {
+                const zipEntry = pokemonZip.file(name) || pokemonZip.file(`pokemon_sprites_centered/${name}`);
+                if (zipEntry) {
+                    try {
+                        const blob = await zipEntry.async('blob');
+                        const url = URL.createObjectURL(blob);
+                        pokemonImages[normalizedSpecies] = url;
+                        return url;
+                    } catch (error) {
+                        console.warn('Error loading image for', species, error);
+                    }
+                }
+            }
+            
+            // Cache miss result to avoid repeated attempts
+            pokemonImages[normalizedSpecies] = null;
+            return null;
         }
 
         function filterByRound() {
@@ -326,9 +380,7 @@
             document.getElementById('flashcard').classList.remove('flipped');
             if (filteredFlashcards.length > 0) {
                 displayCard(currentCardIndex);
-                document.getElementById('error-message').textContent = '';
-                document.getElementById('flashcard').classList.remove('hidden');
-                document.getElementById('controls').classList.remove('hidden');
+                showInterface();
             } else {
                 document.getElementById('error-message').textContent = `No cards found for Round ${round}`;
                 document.getElementById('flashcard').classList.add('hidden');
@@ -336,7 +388,7 @@
             }
         }
 
-        function displayCard(index) {
+        async function displayCard(index) {
             const card = filteredFlashcards[index];
             if (!card) {
                 console.warn('No card at index:', index);
@@ -346,43 +398,39 @@
             // Update front
             document.getElementById('front-name').textContent = card.species;
             document.getElementById('front-set').textContent = `Set #${card.set}`;
+            
+            // Load Pokemon image asynchronously
             const pokemonImage = document.getElementById('pokemon-image');
-            // Normalize key: lowercase, remove spaces and special chars
-            let speciesKey = card.species.toLowerCase().replace(/[^a-z0-9]/g, '');
-            console.log('Looking for image key:', speciesKey, 'for species:', card.species);
-            if (pokemonImages[speciesKey]) {
-                pokemonImage.src = pokemonImages[speciesKey];
+            const imageUrl = await getPokemonImage(card.species);
+            if (imageUrl) {
+                pokemonImage.src = imageUrl;
                 pokemonImage.classList.remove('hidden');
             } else {
-                // Fallback: try with spaces removed but keep special chars
-                speciesKey = card.species.toLowerCase().replace(/\s+/g, '');
-                if (pokemonImages[speciesKey]) {
-                    pokemonImage.src = pokemonImages[speciesKey];
-                    pokemonImage.classList.remove('hidden');
-                } else {
-                    pokemonImage.classList.add('hidden');
-                    console.warn('No image for:', card.species, 'Tried keys:', [card.species.toLowerCase().replace(/\s+/g, ''), speciesKey]);
-                }
+                pokemonImage.classList.add('hidden');
             }
 
-            // Update back
+            // Update back with moves and type icons
             const movesList = document.getElementById('back-moves');
             movesList.innerHTML = '';
             card.moves.forEach(move => {
                 const li = document.createElement('li');
-                const type = moveToType[move] ? moveToType[move].toLowerCase() : '';
-                if (type && typeImages[type]) {
-                    const img = document.createElement('img');
-                    img.src = typeImages[type];
-                    img.className = 'type-icon';
-                    img.alt = type;
-                    li.appendChild(img);
-                } else if (type) {
-                    console.warn(`No type image for move: ${move}, type: ${type}`);
-                } else if (moveToType[move] === undefined) {
-                    console.warn(`No type defined for move: ${move}`);
+                
+                // Add type icon if available
+                const type = moveToType[move];
+                if (type) {
+                    const normalizedType = type.toLowerCase();
+                    if (typeImages[normalizedType]) {
+                        const img = document.createElement('img');
+                        img.src = typeImages[normalizedType];
+                        img.className = 'type-icon';
+                        img.alt = type;
+                        li.appendChild(img);
+                    }
                 }
-                li.appendChild(document.createTextNode(move));
+                
+                // Add move name
+                const moveText = document.createTextNode(move);
+                li.appendChild(moveText);
                 movesList.appendChild(li);
             });
         }
@@ -397,7 +445,7 @@
                 setTimeout(() => {
                     currentCardIndex++;
                     displayCard(currentCardIndex);
-                }, 600);
+                }, 300); // Reduced delay for faster navigation
             }
         }
 
@@ -407,7 +455,7 @@
                 setTimeout(() => {
                     currentCardIndex--;
                     displayCard(currentCardIndex);
-                }, 600);
+                }, 300); // Reduced delay for faster navigation
             }
         }
     </script>
