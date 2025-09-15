@@ -117,6 +117,73 @@
             gap: 10px;
             flex-wrap: wrap;
         }
+        .about-button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .about-button:hover {
+            background: #5a6268;
+        }
+        .about-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+        .about-content {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+            max-width: 500px;
+            margin: 20px;
+            color: #333;
+            line-height: 1.6;
+            position: relative;
+        }
+        .about-content h3 {
+            margin-top: 0;
+            color: #667eea;
+        }
+        .about-content a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .about-content a:hover {
+            text-decoration: underline;
+        }
+        .close-popup {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .close-popup:hover {
+            color: #333;
+            background: #f0f0f0;
+            border-radius: 50%;
+        }
         .pokemon-selector {
             position: relative;
             display: none;
@@ -152,42 +219,6 @@
         }
         .pokemon-option:last-child {
             border-bottom: none;
-        }
-        .about-section {
-            margin-top: 30px;
-            text-align: center;
-        }
-        .about-button {
-            background: #6c757d;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 0.9em;
-        }
-        .about-button:hover {
-            background: #5a6268;
-        }
-        .about-text {
-            display: none;
-            margin-bottom: 15px;
-            padding: 20px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            max-width: 500px;
-            margin-left: auto;
-            margin-right: auto;
-            color: #333;
-            line-height: 1.5;
-        }
-        .about-text a {
-            color: #667eea;
-            text-decoration: none;
-        }
-        .about-text a:hover {
-            text-decoration: underline;
         }
         button, select {
             padding: 10px 20px;
@@ -241,6 +272,7 @@
         </label>
     </div>
     <div class="round-selector hidden" id="round-selector">
+        <button class="about-button" onclick="toggleAbout()">About</button>
         <select id="round-select" onchange="applyCurrentFilter()">
             <option value="all">Round 5+</option>
             <option value="1">Round 1</option>
@@ -257,10 +289,11 @@
     </div>
     <div class="error" id="error-message"></div>
 
-    <div class="about-section">
-        <button class="about-button" onclick="toggleAbout()">About</button>
-        <div class="about-text" id="about-text">
-            This tool displays flash cards for all Pokemon in the Open Level Battle Factory in Pokemon Emerald. To contact me or look at my other projects, see <a href="https://njkmath.github.io/projects/" target="_blank">https://njkmath.github.io/projects/</a>
+    <div class="about-popup" id="about-popup" onclick="closePopupOnBackdrop(event)">
+        <div class="about-content">
+            <button class="close-popup" onclick="toggleAbout()">&times;</button>
+            <h3>About Frontier Flashcards</h3>
+            <p>This tool displays flash cards for all Pokemon in the Open Level Battle Factory in Pokemon Emerald. To contact me or look at my other projects, see <a href="https://njkmath.github.io/projects/" target="_blank">https://njkmath.github.io/projects/</a></p>
         </div>
     </div>
 
