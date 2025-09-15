@@ -272,6 +272,15 @@
                 document.getElementById('loading-message').style.display = 'none';
                 console.error(errorMsg, error);
             }
+        }
+
+        function toggleAbout() {
+            const aboutText = document.getElementById('about-text');
+            if (aboutText.style.display === 'none' || aboutText.style.display === '') {
+                aboutText.style.display = 'block';
+            } else {
+                aboutText.style.display = 'none';
+            }
         };
 
         function updateLoadingMessage(message) {
