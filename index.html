@@ -273,18 +273,20 @@
     </div>
     <div class="round-selector hidden" id="round-selector">
         <button class="about-button" onclick="toggleAbout()">About</button>
-        <select id="round-select" onchange="applyCurrentFilter()">
-            <option value="all">Round 5+</option>
-            <option value="1">Round 1</option>
-            <option value="2">Round 2</option>
-            <option value="3">Round 3</option>
-            <option value="4">Round 4</option>
-            <option value="single">Single Pokemon</option>
-        </select>
-        <div class="pokemon-selector" id="pokemon-selector">
-            <input type="text" class="pokemon-search" id="pokemon-search" placeholder="Type Pokemon name..." 
-                   onclick="showPokemonDropdown()" oninput="filterPokemonOptions()" onblur="hidePokemonDropdown()">
-            <div class="pokemon-dropdown" id="pokemon-dropdown"></div>
+        <div class="round-select-container">
+            <select id="round-select" onchange="applyCurrentFilter()">
+                <option value="all">Round 5+</option>
+                <option value="1">Round 1</option>
+                <option value="2">Round 2</option>
+                <option value="3">Round 3</option>
+                <option value="4">Round 4</option>
+                <option value="single">Single Pokemon</option>
+            </select>
+            <div class="pokemon-selector" id="pokemon-selector">
+                <input type="text" class="pokemon-search" id="pokemon-search" placeholder="Type Pokemon name..." 
+                       onclick="showPokemonDropdown()" oninput="filterPokemonOptions()" onblur="hidePokemonDropdown()">
+                <div class="pokemon-dropdown" id="pokemon-dropdown"></div>
+            </div>
         </div>
     </div>
     <div class="error" id="error-message"></div>
