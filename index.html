@@ -68,9 +68,9 @@
             opacity: 0.8;
         }
         .pokemon-image {
-            width: 196px !important;
+            width: 300px !important;
             height: auto !important;
-            max-height: 196px !important;
+            max-height: 300px !important;
             margin-bottom: 10px;
         }
         .moves-list {
@@ -427,6 +427,12 @@
             let baseCards;
             if (round === 'all') {
                 baseCards = flashcardsData;
+            } else if (round === 'single') {
+                if (!selectedPokemon) {
+                    baseCards = [];
+                } else {
+                    baseCards = flashcardsData.filter(card => card.species === selectedPokemon);
+                }
             } else {
                 baseCards = flashcardsData.filter(card => 
                     card.set === round && card.round5Plus === 'no'
@@ -446,7 +452,13 @@
                 displayCard(currentCardIndex);
                 showInterface();
             } else {
-                document.getElementById('error-message').textContent = `No cards found for Round ${round}`;
+                let errorMsg = `No cards found for Round ${round}`;
+                if (round === 'single' && selectedPokemon) {
+                    errorMsg = `No cards found for ${selectedPokemon}`;
+                } else if (round === 'single') {
+                    errorMsg = 'Please select a Pokemon';
+                }
+                document.getElementById('error-message').textContent = errorMsg;
                 document.getElementById('flashcard').classList.add('hidden');
                 document.getElementById('controls').classList.add('hidden');
             }
