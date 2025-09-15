@@ -548,7 +548,8 @@
                 baseCards = flashcardsData;
             } else if (round === 'single') {
                 if (!selectedPokemon) {
-                    baseCards = [];
+                    // Don't show error, just keep current cards displayed
+                    return;
                 } else {
                     baseCards = flashcardsData.filter(card => card.species === selectedPokemon);
                 }
@@ -574,8 +575,6 @@
                 let errorMsg = `No cards found for Round ${round}`;
                 if (round === 'single' && selectedPokemon) {
                     errorMsg = `No cards found for ${selectedPokemon}`;
-                } else if (round === 'single') {
-                    errorMsg = 'Please select a Pokemon';
                 }
                 document.getElementById('error-message').textContent = errorMsg;
                 document.getElementById('flashcard').classList.add('hidden');
