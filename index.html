@@ -698,11 +698,17 @@
         }
 
         function toggleAbout() {
-            const aboutText = document.getElementById('about-text');
-            if (aboutText.style.display === 'none' || aboutText.style.display === '') {
-                aboutText.style.display = 'block';
+            const aboutPopup = document.getElementById('about-popup');
+            if (aboutPopup.style.display === 'flex') {
+                aboutPopup.style.display = 'none';
             } else {
-                aboutText.style.display = 'none';
+                aboutPopup.style.display = 'flex';
+            }
+        }
+
+        function closePopupOnBackdrop(event) {
+            if (event.target.id === 'about-popup') {
+                toggleAbout();
             }
         }
     </script>
