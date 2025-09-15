@@ -158,6 +158,10 @@
         <button onclick="prevCard()">Previous</button>
         <button onclick="nextCard()">Next</button>
         <button onclick="flipCard()">Flip</button>
+        <label>
+            <input type="checkbox" id="randomize-toggle" onchange="toggleRandomization()">
+            Randomized Order
+        </label>
     </div>
     <div class="round-selector hidden" id="round-selector">
         <select id="round-select" onchange="applyCurrentFilter()">
@@ -167,10 +171,6 @@
             <option value="3">Round 3</option>
             <option value="4">Round 4</option>
         </select>
-        <label>
-            <input type="checkbox" id="randomize-toggle" onchange="toggleRandomization()">
-            Randomized Order
-        </label>
     </div>
     <div class="error" id="error-message"></div>
 
