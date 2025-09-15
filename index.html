@@ -55,7 +55,7 @@
             color: white;
         }
         .card-back {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            background: linear-gradient(135deg, #34495E 0%, #2C3E50 100%);
             color: white;
             transform: rotateY(180deg);
         }
@@ -68,8 +68,8 @@
             opacity: 0.8;
         }
         .pokemon-image {
-            max-width: 150px;
-            max-height: 150px;
+            max-width: 300px;
+            max-height: 300px;
             margin-bottom: 10px;
         }
         .moves-list {
@@ -88,8 +88,8 @@
             gap: 10px;
         }
         .type-icon {
-            width: 30px;
-            height: 12px;
+            width: 45px;
+            height: 18px;
             flex-shrink: 0;
             image-rendering: pixelated; /* Keeps crisp pixel art */
         }
@@ -100,6 +100,17 @@
         }
         .round-selector {
             margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .round-selector label {
+            color: #333;
+            font-size: 1em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         button, select {
             padding: 10px 20px;
@@ -149,13 +160,17 @@
         <button onclick="flipCard()">Flip</button>
     </div>
     <div class="round-selector hidden" id="round-selector">
-        <select id="round-select" onchange="filterByRound()">
+        <select id="round-select" onchange="applyCurrentFilter()">
             <option value="all">Round 5+</option>
             <option value="1">Round 1</option>
             <option value="2">Round 2</option>
             <option value="3">Round 3</option>
             <option value="4">Round 4</option>
         </select>
+        <label>
+            <input type="checkbox" id="randomize-toggle" onchange="toggleRandomization()">
+            Randomized Order
+        </label>
     </div>
     <div class="error" id="error-message"></div>
 
@@ -167,6 +182,7 @@
         let typeImages = {};
         let moveToType = {};
         let pokemonZip = null;
+        let isRandomized = false;
 
         // Load all data on page load
         window.onload = async function() {
@@ -189,10 +205,9 @@
                 
                 // Start displaying cards immediately with type icons
                 if (flashcardsData.length > 0) {
-                    filteredFlashcards = flashcardsData;
                     currentCardIndex = 0;
                     showInterface();
-                    displayCard(currentCardIndex);
+                    applyCurrentFilter(); // Use the new filtering system
                 }
                 
                 // Load Pokemon images in background (slower)
@@ -383,15 +398,47 @@
             }
         }
 
-        function filterByRound() {
+        // Fisher-Yates shuffle algorithm
+        function shuffleArray(array) {
+            const shuffled = [...array]; // Create a copy
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function toggleRandomization() {
+            isRandomized = document.getElementById('randomize-toggle').checked;
+            applyCurrentFilter();
+        }
+
+        function applyCurrentFilter() {
             const round = document.getElementById('round-select').value;
+            filterByRound(round);
+        }
+
+        function filterByRound(round = null) {
+            if (round === null) {
+                round = document.getElementById('round-select').value;
+            }
+            
+            let baseCards;
             if (round === 'all') {
-                filteredFlashcards = flashcardsData;
+                baseCards = flashcardsData;
             } else {
-                filteredFlashcards = flashcardsData.filter(card => 
+                baseCards = flashcardsData.filter(card => 
                     card.set === round && card.round5Plus === 'no'
                 );
             }
+            
+            // Apply randomization if enabled
+            if (isRandomized) {
+                filteredFlashcards = shuffleArray(baseCards);
+            } else {
+                filteredFlashcards = [...baseCards]; // Create a copy to avoid modifying original
+            }
+            
             currentCardIndex = 0;
             document.getElementById('flashcard').classList.remove('flipped');
             if (filteredFlashcards.length > 0) {
