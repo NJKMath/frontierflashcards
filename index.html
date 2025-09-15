@@ -153,6 +153,42 @@
         .pokemon-option:last-child {
             border-bottom: none;
         }
+        .about-section {
+            margin-top: 30px;
+            text-align: center;
+        }
+        .about-button {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+        .about-button:hover {
+            background: #5a6268;
+        }
+        .about-text {
+            display: none;
+            margin-top: 15px;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            color: #333;
+            line-height: 1.5;
+        }
+        .about-text a {
+            color: #667eea;
+            text-decoration: none;
+        }
+        .about-text a:hover {
+            text-decoration: underline;
+        }
         button, select {
             padding: 10px 20px;
             font-size: 1em;
@@ -221,6 +257,13 @@
     </div>
     <div class="error" id="error-message"></div>
 
+    <div class="about-section">
+        <button class="about-button" onclick="toggleAbout()">About</button>
+        <div class="about-text" id="about-text">
+            This tool displays flash cards for all Pokemon in the Open Level Battle Factory in Pokemon Emerald. To contact me or look at my other projects, see <a href="https://njkmath.github.io/projects/" target="_blank">https://njkmath.github.io/projects/</a>
+        </div>
+    </div>
+
     <script>
         let flashcardsData = [];
         let filteredFlashcards = [];
@@ -271,15 +314,6 @@
                 document.getElementById('error-message').textContent = errorMsg;
                 document.getElementById('loading-message').style.display = 'none';
                 console.error(errorMsg, error);
-            }
-        }
-
-        function toggleAbout() {
-            const aboutText = document.getElementById('about-text');
-            if (aboutText.style.display === 'none' || aboutText.style.display === '') {
-                aboutText.style.display = 'block';
-            } else {
-                aboutText.style.display = 'none';
             }
         };
 
@@ -483,6 +517,8 @@
             if (round === 'single') {
                 pokemonSelector.style.display = 'block';
                 populatePokemonDropdown();
+                // Don't filter yet - wait for Pokemon selection
+                return;
             } else {
                 pokemonSelector.style.display = 'none';
                 selectedPokemon = '';
@@ -516,7 +552,7 @@
             
             dropdown.innerHTML = '';
             const filteredPokemon = uniquePokemon.filter(pokemon => 
-                pokemon.toLowerCase().includes(searchValue)
+                pokemon.toLowerCase().startsWith(searchValue)
             );
             
             filteredPokemon.forEach(pokemon => {
@@ -534,7 +570,7 @@
             selectedPokemon = pokemon;
             document.getElementById('pokemon-search').value = pokemon;
             hidePokemonDropdown();
-            applyCurrentFilter();
+            filterByRound('single'); // Directly filter for single Pokemon
         }
 
         function showPokemonDropdown() {
@@ -658,6 +694,15 @@
                     currentCardIndex--;
                     displayCard(currentCardIndex);
                 }, 200); // Even faster transition
+            }
+        }
+
+        function toggleAbout() {
+            const aboutText = document.getElementById('about-text');
+            if (aboutText.style.display === 'none' || aboutText.style.display === '') {
+                aboutText.style.display = 'block';
+            } else {
+                aboutText.style.display = 'none';
             }
         }
     </script>
