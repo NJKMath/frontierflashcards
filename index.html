@@ -68,9 +68,9 @@
             opacity: 0.8;
         }
         .pokemon-image {
-            width: 300px !important;
-            height: auto !important;
-            max-height: 300px !important;
+            width: 196px !important;
+            height: 196px !important;
+            object-fit: contain;
             margin-bottom: 10px;
         }
         .moves-list {
@@ -112,6 +112,46 @@
         }
         .round-selector {
             margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .pokemon-selector {
+            position: relative;
+            display: none;
+        }
+        .pokemon-search {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            width: 200px;
+        }
+        .pokemon-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid #ddd;
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+        .pokemon-option {
+            padding: 8px 12px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+        .pokemon-option:hover {
+            background-color: #f5f5f5;
+        }
+        .pokemon-option:last-child {
+            border-bottom: none;
         }
         button, select {
             padding: 10px 20px;
@@ -171,7 +211,13 @@
             <option value="2">Round 2</option>
             <option value="3">Round 3</option>
             <option value="4">Round 4</option>
+            <option value="single">Single Pokemon</option>
         </select>
+        <div class="pokemon-selector" id="pokemon-selector">
+            <input type="text" class="pokemon-search" id="pokemon-search" placeholder="Type Pokemon name..." 
+                   onclick="showPokemonDropdown()" oninput="filterPokemonOptions()" onblur="hidePokemonDropdown()">
+            <div class="pokemon-dropdown" id="pokemon-dropdown"></div>
+        </div>
     </div>
     <div class="error" id="error-message"></div>
 
@@ -184,6 +230,8 @@
         let moveToType = {};
         let pokemonZip = null;
         let isRandomized = false;
+        let uniquePokemon = [];
+        let selectedPokemon = '';
 
         // Load all data on page load
         window.onload = async function() {
@@ -283,6 +331,10 @@
             
             flashcardsData = mappedData.filter(card => card.species && card.set && card.moves.length > 0);
             console.log('Loaded', flashcardsData.length, 'valid flashcards');
+
+            // Extract unique Pokemon for the dropdown
+            uniquePokemon = [...new Set(flashcardsData.map(card => card.species))].sort();
+            console.log('Found', uniquePokemon.length, 'unique Pokemon');
 
             if (flashcardsData.length === 0) {
                 throw new Error('No valid data found in CSV');
@@ -416,7 +468,74 @@
 
         function applyCurrentFilter() {
             const round = document.getElementById('round-select').value;
+            
+            // Show/hide Pokemon selector based on selection
+            const pokemonSelector = document.getElementById('pokemon-selector');
+            if (round === 'single') {
+                pokemonSelector.style.display = 'block';
+                populatePokemonDropdown();
+            } else {
+                pokemonSelector.style.display = 'none';
+                selectedPokemon = '';
+                document.getElementById('pokemon-search').value = '';
+            }
+            
             filterByRound(round);
+        }
+
+        function populatePokemonDropdown() {
+            const dropdown = document.getElementById('pokemon-dropdown');
+            dropdown.innerHTML = '';
+            
+            uniquePokemon.forEach(pokemon => {
+                const option = document.createElement('div');
+                option.className = 'pokemon-option';
+                option.textContent = pokemon;
+                option.onmousedown = () => selectPokemon(pokemon); // Use mousedown to prevent blur
+                dropdown.appendChild(option);
+            });
+        }
+
+        function filterPokemonOptions() {
+            const searchValue = document.getElementById('pokemon-search').value.toLowerCase();
+            const dropdown = document.getElementById('pokemon-dropdown');
+            
+            if (searchValue.length === 0) {
+                populatePokemonDropdown();
+                return;
+            }
+            
+            dropdown.innerHTML = '';
+            const filteredPokemon = uniquePokemon.filter(pokemon => 
+                pokemon.toLowerCase().includes(searchValue)
+            );
+            
+            filteredPokemon.forEach(pokemon => {
+                const option = document.createElement('div');
+                option.className = 'pokemon-option';
+                option.textContent = pokemon;
+                option.onmousedown = () => selectPokemon(pokemon);
+                dropdown.appendChild(option);
+            });
+            
+            showPokemonDropdown();
+        }
+
+        function selectPokemon(pokemon) {
+            selectedPokemon = pokemon;
+            document.getElementById('pokemon-search').value = pokemon;
+            hidePokemonDropdown();
+            applyCurrentFilter();
+        }
+
+        function showPokemonDropdown() {
+            document.getElementById('pokemon-dropdown').style.display = 'block';
+        }
+
+        function hidePokemonDropdown() {
+            setTimeout(() => {
+                document.getElementById('pokemon-dropdown').style.display = 'none';
+            }, 150); // Delay to allow clicks on options
         }
 
         function filterByRound(round = null) {
