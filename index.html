@@ -264,7 +264,7 @@
     <div class="flashcard hidden" id="flashcard" onclick="flipCard()">
         <div class="card-inner">
             <div class="card-front">
-                <img id="pokemon-image" class="pokemon-image hidden" src="" alt="PokÃƒÂ©mon">
+                <img id="pokemon-image" class="pokemon-image hidden" src="" alt="PokÃƒÆ'Ã‚Â©mon">
                 <div class="pokemon-name" id="front-name"></div>
                 <div class="set-number" id="front-set"></div>
             </div>
@@ -410,6 +410,7 @@
                 species: (row['Species'] || '').trim(),
                 set: (row['Set#'] || '').trim(),
                 round5Plus: (row['Round 5+ Only'] || '').trim().toLowerCase(),
+                item: (row['Item'] || '').trim(),
                 moves: [
                     (row['Move 1'] || '').trim(),
                     (row['Move 2'] || '').trim(),
@@ -727,6 +728,18 @@
                 li.appendChild(moveText);
                 movesList.appendChild(li);
             });
+
+            // Add item below moves if it exists
+            if (card.item) {
+                const itemDiv = document.createElement('div');
+                itemDiv.style.marginTop = '15px';
+                itemDiv.style.fontSize = '1.1em';
+                itemDiv.style.padding = '8px 15px';
+                itemDiv.style.background = 'rgba(255,255,255,0.3)';
+                itemDiv.style.borderRadius = '5px';
+                itemDiv.textContent = `Item: ${card.item}`;
+                movesList.appendChild(itemDiv);
+            }
         }
 
         function flipCard() {
