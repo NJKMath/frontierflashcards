@@ -299,10 +299,10 @@ Fire Flying,Moltres,2,Hardy,White Herb,Overheat,Aerial Ace,Double Team,Protect,P
 Fire Flying,Moltres,4,Quiet,White Herb,Overheat,Double-Edge,Steel Wing,Safeguard,Pressure, 0 /255/ 0 /255/ 0 / 0 ,yes,90,100,90,125,85,90
 Fire Flying,Moltres,5,Docile,White Herb,Overheat,Sunny Day,Swagger,Facade,Pressure, 0 / 0 / 0 /255/ 0 /255,yes,90,100,90,125,85,90
 Fire Flying,Moltres,6,Docile,White Herb,Overheat,Double-Edge,Aerial Ace,Steel Wing,Pressure, 0 /255/ 0 /255/ 0 / 0 ,yes,90,100,90,125,85,90
-Psychic,Mr.Mime,1,Relaxed,Leftovers,Psychic,Magical Leaf,Fake Out,Reflect,Soundproof,255/ 0 /255/ 0 / 0 / 0 ,no,40,45,65,100,120,90
-Psychic,Mr.Mime,2,Adamant,Liechi Berry,Baton Pass,Swagger,Psych Up,Psychic,Soundproof,170/ 0 /170/ 0 /170/ 0 ,no,40,45,65,100,120,90
-Psychic,Mr.Mime,3,Modest,Choice Band,Trick,Torment,Psychic,Thunderbolt,Soundproof,255/ 0 / 0 /255/ 0 / 0 ,no,40,45,65,100,120,90
-Psychic,Mr.Mime,4,Modest,BrightPowder,Psychic,Thunderbolt,Ice Punch,Fire Punch,Soundproof,255/ 0 / 0 /255/ 0 / 0 ,no,40,45,65,100,120,90
+Psychic,Mr. Mime,1,Relaxed,Leftovers,Psychic,Magical Leaf,Fake Out,Reflect,Soundproof,255/ 0 /255/ 0 / 0 / 0 ,no,40,45,65,100,120,90
+Psychic,Mr. Mime,2,Adamant,Liechi Berry,Baton Pass,Swagger,Psych Up,Psychic,Soundproof,170/ 0 /170/ 0 /170/ 0 ,no,40,45,65,100,120,90
+Psychic,Mr. Mime,3,Modest,Choice Band,Trick,Torment,Psychic,Thunderbolt,Soundproof,255/ 0 / 0 /255/ 0 / 0 ,no,40,45,65,100,120,90
+Psychic,Mr. Mime,4,Modest,BrightPowder,Psychic,Thunderbolt,Ice Punch,Fire Punch,Soundproof,255/ 0 / 0 /255/ 0 / 0 ,no,40,45,65,100,120,90
 Poison,Muk,1,Adamant,Poison Barb,Sludge Bomb,Body Slam,Screech,Minimize,Stench / Sticky Hold,255/255/ 0 / 0 / 0 / 0 ,no,105,105,75,65,100,50
 Poison,Muk,2,Hardy,Chesto Berry,Curse,Rest,Sludge Bomb,DynamicPunch,Stench / Sticky Hold, 0 /255/255/ 0 / 0 / 0 ,no,105,105,75,65,100,50
 Poison,Muk,3,Quiet,Lum Berry,Sludge Bomb,Thunderbolt,Flamethrower,Ice Punch,Stench / Sticky Hold, 0 / 0 /255/255/ 0 / 0 ,no,105,105,75,65,100,50
