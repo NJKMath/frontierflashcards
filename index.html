@@ -120,10 +120,10 @@
             min-height: 50px;
         }
         .round-select-container {
+            position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 15px;
         }
         .about-button {
             background: #6c757d;
@@ -133,6 +133,8 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9em;
+            position: absolute;
+            right: 120px;
         }
         .about-button:hover {
             background: #5a6268;
@@ -194,14 +196,15 @@
         }
         .pokemon-selector {
             display: none;
-            position: relative;
+            position: absolute;
+            left: 120px;
         }
         .pokemon-search {
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 5px;
             font-size: 1em;
-            width: 200px;
+            width: 120px;
         }
         .pokemon-dropdown {
             position: absolute;
@@ -280,8 +283,8 @@
         </label>
     </div>
     <div class="round-selector hidden" id="round-selector">
+        <button class="about-button" onclick="toggleAbout()">About</button>
         <div class="round-select-container">
-            <button class="about-button" onclick="toggleAbout()">About</button>
             <select id="round-select" onchange="applyCurrentFilter()">
                 <option value="all">Round 5+</option>
                 <option value="1">Round 1</option>
@@ -549,7 +552,13 @@
 
         function toggleRandomization() {
             isRandomized = document.getElementById('randomize-toggle').checked;
-            applyCurrentFilter();
+            // If we're in single Pokemon mode and have a Pokemon selected, re-filter to apply randomization
+            const round = document.getElementById('round-select').value;
+            if (round === 'single' && selectedPokemon) {
+                filterByRound('single');
+            } else {
+                applyCurrentFilter();
+            }
         }
 
         function applyCurrentFilter() {
