@@ -113,9 +113,19 @@
         .round-selector {
             margin: 10px 0;
             display: flex;
+            justify-content: center;
             align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            min-height: 50px;
+        }
+        .round-select-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: nowrap;
         }
         .about-button {
             background: #6c757d;
@@ -125,6 +135,8 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9em;
+            position: absolute;
+            left: 20px;
         }
         .about-button:hover {
             background: #5a6268;
