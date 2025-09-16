@@ -117,15 +117,13 @@
             align-items: center;
             position: relative;
             width: 100%;
-            max-width: 800px;
             min-height: 50px;
         }
         .round-select-container {
+            position: relative;
             display: flex;
-            align-items: center;
-            gap: 15px;
             justify-content: center;
-            flex-wrap: nowrap;
+            align-items: center;
         }
         .about-button {
             background: #6c757d;
@@ -136,7 +134,7 @@
             cursor: pointer;
             font-size: 0.9em;
             position: absolute;
-            left: 20px;
+            right: 120px;
         }
         .about-button:hover {
             background: #5a6268;
@@ -197,7 +195,9 @@
             border-radius: 50%;
         }
         .pokemon-selector {
-            position: relative;
+            position: absolute;
+            left: 220px;
+            top: 0;
             display: none;
         }
         .pokemon-search {
