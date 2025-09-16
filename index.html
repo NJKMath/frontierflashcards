@@ -120,10 +120,10 @@
             min-height: 50px;
         }
         .round-select-container {
-            position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
+            gap: 15px;
         }
         .about-button {
             background: #6c757d;
@@ -133,8 +133,6 @@
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9em;
-            position: absolute;
-            right: 120px;
         }
         .about-button:hover {
             background: #5a6268;
@@ -195,10 +193,8 @@
             border-radius: 50%;
         }
         .pokemon-selector {
-            position: absolute;
-            left: 220px;
-            top: 0;
             display: none;
+            position: relative;
         }
         .pokemon-search {
             padding: 10px;
@@ -265,7 +261,7 @@
     <div class="flashcard hidden" id="flashcard" onclick="flipCard()">
         <div class="card-inner">
             <div class="card-front">
-                <img id="pokemon-image" class="pokemon-image hidden" src="" alt="PokÃ©mon">
+                <img id="pokemon-image" class="pokemon-image hidden" src="" alt="PokÃƒÂ©mon">
                 <div class="pokemon-name" id="front-name"></div>
                 <div class="set-number" id="front-set"></div>
             </div>
@@ -284,8 +280,8 @@
         </label>
     </div>
     <div class="round-selector hidden" id="round-selector">
-        <button class="about-button" onclick="toggleAbout()">About</button>
         <div class="round-select-container">
+            <button class="about-button" onclick="toggleAbout()">About</button>
             <select id="round-select" onchange="applyCurrentFilter()">
                 <option value="all">Round 5+</option>
                 <option value="1">Round 1</option>
@@ -564,7 +560,10 @@
             if (round === 'single') {
                 pokemonSelector.style.display = 'block';
                 populatePokemonDropdown();
-                // Don't filter yet - wait for Pokemon selection
+                // If we already have a Pokemon selected, filter immediately
+                if (selectedPokemon) {
+                    filterByRound('single');
+                }
                 return;
             } else {
                 pokemonSelector.style.display = 'none';
@@ -617,7 +616,8 @@
             selectedPokemon = pokemon;
             document.getElementById('pokemon-search').value = pokemon;
             hidePokemonDropdown();
-            filterByRound('single'); // Directly filter for single Pokemon
+            // Apply current filter settings including randomization
+            filterByRound('single');
         }
 
         function showPokemonDropdown() {
