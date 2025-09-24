@@ -7,6 +7,36 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <style>
+        :root {
+            --bg-color: #f0f0f0;
+            --text-color: #333;
+            --card-front-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-back-bg: linear-gradient(135deg, #34495E 0%, #2C3E50 100%);
+            --card-shadow: rgba(0,0,0,0.2);
+            --control-bg: #4CAF50;
+            --control-hover: #45a049;
+            --dropdown-bg: white;
+            --dropdown-border: #ddd;
+            --option-hover: #f5f5f5;
+            --button-secondary: #6c757d;
+            --button-secondary-hover: #5a6268;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #1a1a1a;
+            --text-color: #e0e0e0;
+            --card-front-bg: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+            --card-back-bg: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            --card-shadow: rgba(0,0,0,0.5);
+            --control-bg: #48bb78;
+            --control-hover: #38a169;
+            --dropdown-bg: #2d3748;
+            --dropdown-border: #4a5568;
+            --option-hover: #4a5568;
+            --button-secondary: #718096;
+            --button-secondary-hover: #4a5568;
+        }
+
         body {
             font-family: Arial, sans-serif;
             display: flex;
@@ -16,14 +46,67 @@
             min-height: 100vh;
             margin: 0;
             padding-top: 50px;
-            background-color: #f0f0f0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: background-color 0.3s, color 0.3s;
         }
+
+        .dark-mode-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            background: var(--dropdown-bg);
+            border: 2px solid var(--dropdown-border);
+            border-radius: 25px;
+            padding: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .theme-slider {
+            position: relative;
+            width: 80px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 5px;
+        }
+
+        .theme-icon {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            z-index: 2;
+            transition: opacity 0.3s;
+        }
+
+        .theme-slider-bg {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 36px;
+            height: 36px;
+            background: #888;
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            z-index: 1;
+        }
+
+        [data-theme="dark"] .theme-slider-bg {
+            transform: translateX(50px);
+        }
+
         .flashcard {
             width: 320px;
             height: 420px;
             perspective: 1000px;
             cursor: pointer;
         }
+
         .card-inner {
             position: relative;
             width: 100%;
@@ -32,9 +115,11 @@
             transition: transform 0.4s;
             transform-style: preserve-3d;
         }
+
         .flashcard.flipped .card-inner {
             transform: rotateY(180deg);
         }
+
         .card-front, .card-back {
             position: absolute;
             width: 100%;
@@ -42,7 +127,7 @@
             backface-visibility: hidden;
             background: white;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 8px var(--card-shadow);
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -50,34 +135,61 @@
             padding: 20px;
             box-sizing: border-box;
         }
+
         .card-front {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: var(--card-front-bg);
             color: white;
         }
+
         .card-back {
-            background: linear-gradient(135deg, #34495E 0%, #2C3E50 100%);
+            background: var(--card-back-bg);
             color: white;
             transform: rotateY(180deg);
         }
+
         .pokemon-name {
             font-size: 2em;
             margin-bottom: 10px;
         }
+
         .set-number {
             font-size: 1.2em;
             opacity: 0.8;
         }
+
         .pokemon-image {
             width: 196px !important;
             height: 196px !important;
             object-fit: contain;
             margin-bottom: 10px;
         }
+
+        .replay-button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            transition: background-color 0.3s;
+        }
+
+        .replay-button:hover {
+            background: rgba(255,255,255,1);
+        }
+
         .moves-list {
             list-style: none;
             padding: 0;
             width: 100%;
         }
+
         .moves-list li {
             font-size: 1.1em;
             margin: 5px 0;
@@ -88,6 +200,7 @@
             align-items: center;
             gap: 10px;
         }
+
         .type-icon {
             width: 45px;
             height: 18px;
@@ -95,14 +208,16 @@
             image-rendering: pixelated;
             object-fit: contain;
         }
+
         .controls {
             margin: 20px 0;
             display: flex;
             gap: 10px;
             align-items: center;
         }
+
         .controls label {
-            color: #333;
+            color: var(--text-color);
             font-size: 1em;
             cursor: pointer;
             display: flex;
@@ -110,7 +225,8 @@
             gap: 5px;
             margin-left: 10px;
         }
-        .round-selector {
+
+        .top-controls {
             margin: 10px 0;
             display: flex;
             justify-content: center;
@@ -118,27 +234,96 @@
             position: relative;
             width: 100%;
             min-height: 50px;
+            gap: 20px;
         }
-        .round-select-container {
-            position: relative;
+
+        .control-group {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            gap: 5px;
         }
+
+        .control-group label {
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        .volume-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .volume-slider {
+            width: 80px;
+            height: 5px;
+            border-radius: 5px;
+            background: var(--dropdown-border);
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        .volume-slider:hover {
+            opacity: 1;
+        }
+
+        .volume-slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--control-bg);
+            cursor: pointer;
+        }
+
+        .volume-slider::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: var(--control-bg);
+            cursor: pointer;
+            border: none;
+        }
+
+        .volume-icon {
+            cursor: pointer;
+            position: relative;
+            display: inline-block;
+            user-select: none;
+        }
+
+        .volume-icon.muted::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background-color: red;
+            transform: translateY(-50%) rotate(-45deg);
+            pointer-events: none;
+        }
+
         .about-button {
-            background: #6c757d;
+            background: var(--button-secondary);
             color: white;
             border: none;
             padding: 8px 16px;
             border-radius: 5px;
             cursor: pointer;
             font-size: 0.9em;
-            position: absolute;
-            right: calc(50% + 100px);
+            position: fixed;
+            top: 85px;
+            right: 40px;
+            z-index: 1000;
         }
+
         .about-button:hover {
-            background: #5a6268;
+            background: var(--button-secondary-hover);
         }
+
         .about-popup {
             display: none;
             position: fixed;
@@ -151,28 +336,33 @@
             justify-content: center;
             align-items: center;
         }
+
         .about-content {
-            background: white;
+            background: var(--dropdown-bg);
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 8px 16px rgba(0,0,0,0.3);
             max-width: 500px;
             margin: 20px;
-            color: #333;
+            color: var(--text-color);
             line-height: 1.6;
             position: relative;
         }
+
         .about-content h3 {
             margin-top: 0;
             color: #667eea;
         }
+
         .about-content a {
             color: #667eea;
             text-decoration: none;
         }
+
         .about-content a:hover {
             text-decoration: underline;
         }
+
         .close-popup {
             position: absolute;
             top: 10px;
@@ -189,30 +379,42 @@
             align-items: center;
             justify-content: center;
         }
+
         .close-popup:hover {
-            color: #333;
-            background: #f0f0f0;
+            color: var(--text-color);
+            background: var(--option-hover);
             border-radius: 50%;
         }
+
+        .round-select-container {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+
         .pokemon-selector {
             display: none;
-            position: absolute;
-            left: calc(50% + 100px);
         }
+
         .pokemon-search {
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--dropdown-border);
             border-radius: 5px;
             font-size: 1em;
             width: 120px;
+            background: var(--dropdown-bg);
+            color: var(--text-color);
         }
+
         .pokemon-dropdown {
             position: absolute;
             top: 100%;
             left: 0;
             right: 0;
-            background: white;
-            border: 1px solid #ddd;
+            background: var(--dropdown-bg);
+            border: 1px solid var(--dropdown-border);
             border-top: none;
             border-radius: 0 0 5px 5px;
             max-height: 200px;
@@ -220,93 +422,152 @@
             z-index: 1000;
             display: none;
         }
+
         .pokemon-option {
             padding: 8px 12px;
             cursor: pointer;
             border-bottom: 1px solid #eee;
+            color: var(--text-color);
         }
+
         .pokemon-option:hover {
-            background-color: #f5f5f5;
+            background-color: var(--option-hover);
         }
+
         .pokemon-option:last-child {
             border-bottom: none;
         }
+
         button, select {
             padding: 10px 20px;
             font-size: 1em;
             border: none;
             border-radius: 5px;
-            background: #4CAF50;
+            background: var(--control-bg);
             color: white;
             cursor: pointer;
+            transition: background-color 0.3s;
         }
+
         button:hover, select:hover {
-            background: #45a049;
+            background: var(--control-hover);
         }
+
+        select {
+            background: var(--dropdown-bg);
+            color: var(--text-color);
+            border: 1px solid var(--dropdown-border);
+        }
+
+        select option {
+            background: var(--dropdown-bg);
+            color: var(--text-color);
+        }
+
         .error {
             color: red;
             text-align: center;
             margin-top: 20px;
         }
+
         .loading {
             color: #666;
             text-align: center;
             margin-top: 20px;
         }
-        .flashcard.hidden, .controls.hidden, .round-selector.hidden, .pokemon-image.hidden {
+
+        .flashcard.hidden, .controls.hidden, .top-controls.hidden, .pokemon-image.hidden, .replay-button.hidden {
             display: none;
         }
     </style>
 </head>
 <body>
+    <div class="dark-mode-toggle" onclick="toggleDarkMode()" id="dark-mode-toggle">
+        <div class="theme-slider">
+            <div class="theme-slider-bg"></div>
+            <img src="" alt="Light mode" class="theme-icon" id="solrock-icon">
+            <img src="" alt="Dark mode" class="theme-icon" id="lunatone-icon">
+        </div>
+    </div>
+
     <div class="loading" id="loading-message">Loading flashcards...</div>
     
-    <div class="flashcard hidden" id="flashcard" onclick="flipCard()">
+    <div class="flashcard hidden" id="flashcard" onclick="handleCardClick()">
         <div class="card-inner">
             <div class="card-front">
-                <img id="pokemon-image" class="pokemon-image hidden" src="" alt="PokÃƒÆ'Ã‚Â©mon">
+                <img id="pokemon-image" class="pokemon-image hidden" src="" alt="Pokémon">
                 <div class="pokemon-name" id="front-name"></div>
                 <div class="set-number" id="front-set"></div>
+                <button class="replay-button hidden" id="replay-button" onclick="event.stopPropagation(); replayCry()">🔊 Replay Cry</button>
             </div>
             <div class="card-back">
                 <ul class="moves-list" id="back-moves"></ul>
             </div>
         </div>
     </div>
+
     <div class="controls hidden" id="controls">
         <button onclick="prevCard()">Previous</button>
         <button onclick="nextCard()">Next</button>
-        <button onclick="flipCard()">Flip</button>
+        <button onclick="handleCardClick()">Flip</button>
         <label>
-            <input type="checkbox" id="randomize-toggle" onchange="toggleRandomization()">
+            <input type="checkbox" id="randomize-toggle" onchange="toggleRandomization()" checked>
             Randomized Order
         </label>
     </div>
-    <div class="round-selector hidden" id="round-selector">
-        <button class="about-button" onclick="toggleAbout()">About</button>
-        <div class="round-select-container">
-            <select id="round-select" onchange="applyCurrentFilter()">
-                <option value="all">Round 5+</option>
-                <option value="1">Round 1</option>
-                <option value="2">Round 2</option>
-                <option value="3">Round 3</option>
-                <option value="4">Round 4</option>
-                <option value="single">Single Pokemon</option>
+
+    <button class="about-button" onclick="toggleAbout()">About</button>
+
+    <div class="top-controls hidden" id="top-controls">
+        <div class="control-group">
+            <label>Mode</label>
+            <select id="mode-select" onchange="applyCurrentFilter()">
+                <option value="moves">Moves Only</option>
+                <option value="cries">Cries Only</option>
+                <option value="both">Both</option>
             </select>
+        </div>
+
+        <div class="control-group">
+            <label>Volume</label>
+            <div class="volume-control">
+                <span id="volume-icon" class="volume-icon" onclick="toggleMute()">🔈</span>
+                <input type="range" id="volume-slider" class="volume-slider" min="0" max="100" value="50" onchange="updateVolume()">
+            </div>
+        </div>
+
+        <div class="round-select-container">
+            <div class="control-group">
+                <label>Round</label>
+                <select id="round-select" onchange="applyCurrentFilter()">
+                    <option value="all">Round 5+</option>
+                    <option value="1">Round 1</option>
+                    <option value="2">Round 2</option>
+                    <option value="3">Round 3</option>
+                    <option value="4">Round 4</option>
+                    <option value="single">Single Pokemon</option>
+                </select>
+            </div>
+            
             <div class="pokemon-selector" id="pokemon-selector">
-                <input type="text" class="pokemon-search" id="pokemon-search"  
-                       onclick="showPokemonDropdown()" oninput="filterPokemonOptions()" onblur="hidePokemonDropdown()">
-                <div class="pokemon-dropdown" id="pokemon-dropdown"></div>
+                <div class="control-group">
+                    <label>Pokemon</label>
+                    <input type="text" class="pokemon-search" id="pokemon-search"  
+                           onclick="showPokemonDropdown()" oninput="filterPokemonOptions()" onblur="hidePokemonDropdown()">
+                    <div class="pokemon-dropdown" id="pokemon-dropdown"></div>
+                </div>
             </div>
         </div>
     </div>
+
     <div class="error" id="error-message"></div>
 
     <div class="about-popup" id="about-popup" onclick="closePopupOnBackdrop(event)">
         <div class="about-content">
             <button class="close-popup" onclick="toggleAbout()">&times;</button>
             <h3>About Frontier Flashcards</h3>
-            <p>This tool displays flash cards for all Pokemon in the Open Level Battle Factory in Pokemon Emerald. To contact me or see my other projects, go to <a href="https://njkmath.github.io/projects/" target="_blank">https://njkmath.github.io/projects/</a></p>
+            <p>This tool displays flash cards for all Pokemon in the Open Level Battle Factory in Pokemon Emerald. Press Spacebar to either flip the card or move on to the next card.</p>
+            <p>To contact me or see my other projects, go to <a href="https://njkmath.github.io/projects/" target="_blank">https://njkmath.github.io/projects/</a></p>
         </div>
     </div>
 
@@ -318,12 +579,30 @@
         let typeImages = {};
         let moveToType = {};
         let pokemonZip = null;
-        let isRandomized = false;
+        let isRandomized = true;
         let uniquePokemon = [];
         let selectedPokemon = '';
+        
+        // Audio-related variables
+        let pokemonCries = {};
+        let currentAudio = null;
+        let globalVolume = 0.5;
+        let isMuted = false;
+        let volumeBeforeMute = 0.5;
+        
+        // Card state for cry/sprite/moves progression
+        let cardState = 'initial'; // 'initial', 'sprite', 'moves'
+        let currentMode = 'moves';
+        
+        // Dark mode
+        let isDarkMode = true;
+        let themeImages = {};
 
         // Load all data on page load
         window.onload = async function() {
+            // Set dark mode as default
+            document.body.setAttribute('data-theme', 'dark');
+            
             console.log('Base URL:', window.location.origin);
             updateLoadingMessage('Loading move types and CSV data...');
 
@@ -341,19 +620,55 @@
                 updateLoadingMessage('Loading type icons...');
                 await loadTypeImages();
                 
+                // Load theme images for dark mode toggle
+                updateLoadingMessage('Loading theme icons...');
+                await loadThemeImages();
+                
                 // Start displaying cards immediately with type icons
                 if (flashcardsData.length > 0) {
                     currentCardIndex = 0;
                     showInterface();
-                    applyCurrentFilter(); // Use the new filtering system
+                    applyCurrentFilter();
                 }
                 
                 // Load Pokemon images in background (slower)
                 updateLoadingMessage('Loading Pokemon images in background...');
                 loadPokemonImages(); // Don't await - let it load in background
                 
+                // Initialize Pokemon cries (load on-demand)
+                loadPokemonCries(); // Just sets up the system, doesn't actually load files
+                
                 console.log('Initial loading completed');
                 document.getElementById('loading-message').style.display = 'none';
+
+                // Add spacebar functionality
+                document.addEventListener('keydown', function(event) {
+                    if (event.code === 'Space') {
+                        event.preventDefault(); // Prevent page scroll and button activation
+                        // Deselect any currently focused element
+                        if (document.activeElement) {
+                            document.activeElement.blur();
+                        }
+                        
+                        // Check if we should advance to next card instead of flipping
+                        const flashcard = document.getElementById('flashcard');
+                        const isFlipped = flashcard.classList.contains('flipped');
+                        
+                        if (currentMode === 'moves' && isFlipped) {
+                            // In moves mode, if card is showing moves, go to next
+                            nextCard();
+                        } else if (currentMode === 'both' && isFlipped) {
+                            // In both mode, if card is showing moves, go to next
+                            nextCard();
+                        } else if (currentMode === 'cries' && cardState === 'sprite') {
+                            // In cries mode, if sprite is revealed, go to next
+                            nextCard();
+                        } else {
+                            // Otherwise, flip/reveal
+                            handleCardClick();
+                        }
+                    }
+                });
                 
             } catch (error) {
                 const errorMsg = `Initialization error: ${error.message}`;
@@ -370,8 +685,67 @@
         function showInterface() {
             document.getElementById('flashcard').classList.remove('hidden');
             document.getElementById('controls').classList.remove('hidden');
-            document.getElementById('round-selector').classList.remove('hidden');
+            document.getElementById('top-controls').classList.remove('hidden');
             document.getElementById('error-message').textContent = '';
+        }
+
+        async function loadThemeImages() {
+            try {
+                // Load Solrock and Lunatone from the same Pokemon sprites zip
+                const response = await fetch('pokemon_sprites_centered.zip', { cache: 'no-cache' });
+                if (!response.ok) throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                
+                const arrayBuffer = await response.arrayBuffer();
+                const zip = await JSZip.loadAsync(arrayBuffer);
+                
+                // Look for Solrock and Lunatone images
+                const zipFiles = Object.keys(zip.files);
+                const themeTargets = ['solrock', 'lunatone'];
+                
+                for (const target of themeTargets) {
+                    for (const fileName of zipFiles) {
+                        if (fileName.toLowerCase().includes(target) && /\.(png|jpg|jpeg)$/i.test(fileName)) {
+                            try {
+                                const zipEntry = zip.files[fileName];
+                                const blob = await zipEntry.async('blob');
+                                const url = URL.createObjectURL(blob);
+                                themeImages[target] = url;
+                                break;
+                            } catch (error) {
+                                console.warn('Error loading theme image for', target, error);
+                            }
+                        }
+                    }
+                }
+                
+                // Set initial theme icon
+                updateThemeIcon();
+                console.log('Loaded theme images:', Object.keys(themeImages));
+                
+            } catch (error) {
+                console.warn('Failed to load theme images:', error);
+                // Fallback to text-based toggle
+                document.getElementById('solrock-icon').alt = '☀️';
+                document.getElementById('lunatone-icon').alt = '🌙';
+            }
+        }
+
+        function updateThemeIcon() {
+            const solrockIcon = document.getElementById('solrock-icon');
+            const lunatoneIcon = document.getElementById('lunatone-icon');
+            
+            if (themeImages.solrock) {
+                solrockIcon.src = themeImages.solrock;
+            }
+            if (themeImages.lunatone) {
+                lunatoneIcon.src = themeImages.lunatone;
+            }
+        }
+
+        function toggleDarkMode() {
+            isDarkMode = !isDarkMode;
+            document.body.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+            // The slider animation is handled by CSS
         }
 
         async function loadMoveTypes() {
@@ -481,11 +855,18 @@
                 
                 // Refresh current card to show Pokemon image
                 if (filteredFlashcards.length > 0) {
-                    loadPokemonImageForCurrentCard();
+                    loadCurrentCardImage();
                 }
             } catch (error) {
                 console.warn('Failed to load Pokemon images:', error);
             }
+        }
+
+        async function loadPokemonCries() {
+            // Since cries are in individual files, we'll load them on-demand
+            // Extract unique Pokemon names from our data to know what files to expect
+            const pokemonNames = [...new Set(flashcardsData.map(card => card.species))];
+            console.log('Will attempt to load cries for', pokemonNames.length, 'Pokemon on-demand');
         }
 
         async function getPokemonImage(species) {
@@ -527,17 +908,188 @@
             return null;
         }
 
-        async function loadPokemonImageForCurrentCard() {
-            const card = filteredFlashcards[currentCardIndex];
-            if (!card) return;
+        async function getDefaultImage() {
+            if (!pokemonZip) return null;
             
+            // Check if we already have default.png cached
+            if (pokemonImages['default']) {
+                return pokemonImages['default'];
+            }
+            
+            try {
+                // Try different possible paths for default.png
+                const possiblePaths = ['default.png', 'Default.png', 'DEFAULT.png'];
+                
+                for (const path of possiblePaths) {
+                    const zipEntry = pokemonZip.files[path];
+                    if (zipEntry) {
+                        const blob = await zipEntry.async('blob');
+                        const url = URL.createObjectURL(blob);
+                        pokemonImages['default'] = url;
+                        console.log('Found default image at:', path);
+                        return url;
+                    }
+                }
+                
+                // If not found by exact name, search through all files
+                const zipFiles = Object.keys(pokemonZip.files);
+                for (const fileName of zipFiles) {
+                    if (fileName.toLowerCase().includes('default') && /\.(png|jpg|jpeg)$/i.test(fileName)) {
+                        try {
+                            const zipEntry = pokemonZip.files[fileName];
+                            const blob = await zipEntry.async('blob');
+                            const url = URL.createObjectURL(blob);
+                            pokemonImages['default'] = url;
+                            console.log('Found default image at:', fileName);
+                            return url;
+                        } catch (error) {
+                            console.warn('Error loading default image:', error);
+                        }
+                    }
+                }
+                
+                console.warn('Default image not found in zip file');
+            } catch (error) {
+                console.warn('Error loading default image:', error);
+            }
+            
+            // Cache miss result to avoid repeated attempts
+            pokemonImages['default'] = null;
+            return null;
+        }
+
+        async function playCry(species) {
+            const normalizedSpecies = species.toLowerCase().replace(/[^a-z0-9]/g, '');
+            
+            console.log(`Attempting to play cry for: ${species} (normalized: ${normalizedSpecies})`);
+            
+            // Check if we already have this cry loaded
+            let cryUrl = pokemonCries[normalizedSpecies];
+            
+            // If not loaded, try to fetch it
+            if (!cryUrl) {
+                try {
+                    const cryPath = `pokemon_cries/${normalizedSpecies}.mp3`;
+                    console.log(`Fetching cry from: ${cryPath}`);
+                    const response = await fetch(cryPath, { cache: 'no-cache' });
+                    if (response.ok) {
+                        const blob = await response.blob();
+                        cryUrl = URL.createObjectURL(blob);
+                        pokemonCries[normalizedSpecies] = cryUrl;
+                        console.log(`Successfully loaded cry for: ${normalizedSpecies}`);
+                    } else {
+                        console.warn(`Cry not found for ${species} at ${cryPath}`);
+                        return false;
+                    }
+                } catch (error) {
+                    console.warn(`Error fetching cry for ${species}:`, error);
+                    return false;
+                }
+            }
+
+            try {
+                // Stop any currently playing audio
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                }
+
+                console.log('Playing cry from URL:', cryUrl);
+                currentAudio = new Audio(cryUrl);
+                currentAudio.volume = globalVolume;
+                
+                // Add event listeners for debugging
+                currentAudio.addEventListener('loadstart', () => console.log('Audio loading started'));
+                currentAudio.addEventListener('canplay', () => console.log('Audio can play'));
+                currentAudio.addEventListener('play', () => console.log('Audio playing'));
+                currentAudio.addEventListener('error', (e) => console.error('Audio error:', e));
+                
+                await currentAudio.play();
+                return true;
+            } catch (error) {
+                console.warn('Error playing cry for', species, error);
+                return false;
+            }
+        }
+
+        function replayCry() {
+            const card = filteredFlashcards[currentCardIndex];
+            if (card) {
+                playCry(card.species);
+            }
+        }
+
+        function updateVolume() {
+            const newVolume = document.getElementById('volume-slider').value / 100;
+            if (!isMuted) {
+                globalVolume = newVolume;
+                volumeBeforeMute = newVolume;
+            }
+            if (currentAudio) {
+                currentAudio.volume = isMuted ? 0 : globalVolume;
+            }
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const volumeSlider = document.getElementById('volume-slider');
+            const volumeIcon = document.getElementById('volume-icon');
+            
+            if (isMuted) {
+                // Store current volume and set to 0
+                volumeBeforeMute = globalVolume;
+                volumeSlider.value = 0;
+                globalVolume = 0;
+                volumeIcon.classList.add('muted');
+            } else {
+                // Restore previous volume
+                globalVolume = volumeBeforeMute;
+                volumeSlider.value = globalVolume * 100;
+                volumeIcon.classList.remove('muted');
+            }
+            
+            if (currentAudio) {
+                currentAudio.volume = globalVolume;
+            }
+        }
+
+        async function loadDefaultImageForCurrentCard() {
             const pokemonImage = document.getElementById('pokemon-image');
-            const imageUrl = await getPokemonImage(card.species);
+            const imageUrl = await getDefaultImage();
+            
+            console.log('Loading default image:', imageUrl);
+            
             if (imageUrl) {
                 pokemonImage.src = imageUrl;
                 pokemonImage.classList.remove('hidden');
             } else {
                 pokemonImage.classList.add('hidden');
+            }
+        }
+
+        async function loadPokemonSpriteForCurrentCard() {
+            const card = filteredFlashcards[currentCardIndex];
+            if (!card) return;
+            
+            const pokemonImage = document.getElementById('pokemon-image');
+            const imageUrl = await getPokemonImage(card.species);
+            
+            console.log('Loading Pokemon sprite for', card.species, ':', imageUrl);
+            
+            if (imageUrl) {
+                pokemonImage.src = imageUrl;
+                pokemonImage.classList.remove('hidden');
+            } else {
+                pokemonImage.classList.add('hidden');
+            }
+        }
+
+        async function loadCurrentCardImage() {
+            // Determine what image to load based on mode and state
+            if ((currentMode === 'cries' || currentMode === 'both') && cardState === 'initial') {
+                await loadDefaultImageForCurrentCard();
+            } else {
+                await loadPokemonSpriteForCurrentCard();
             }
         }
 
@@ -564,6 +1116,7 @@
 
         function applyCurrentFilter() {
             const round = document.getElementById('round-select').value;
+            currentMode = document.getElementById('mode-select').value;
             
             // Show/hide Pokemon selector based on selection
             const pokemonSelector = document.getElementById('pokemon-selector');
@@ -669,6 +1222,7 @@
             }
             
             currentCardIndex = 0;
+            cardState = 'initial';
             document.getElementById('flashcard').classList.remove('flipped');
             if (filteredFlashcards.length > 0) {
                 displayCard(currentCardIndex);
@@ -691,20 +1245,51 @@
                 return;
             }
 
-            // Update front immediately
-            document.getElementById('front-name').textContent = card.species;
-            document.getElementById('front-set').textContent = `Set #${card.set}`;
+            // Reset card state and flip state
+            cardState = 'initial';
+            document.getElementById('flashcard').classList.remove('flipped');
+
+            // Update front based on mode
+            const frontName = document.getElementById('front-name');
+            const frontSet = document.getElementById('front-set');
+            
+            if ((currentMode === 'cries' || currentMode === 'both') && cardState === 'initial') {
+                // Hide name and set in cries/both mode initially
+                frontName.textContent = '???';
+                frontSet.textContent = '';
+            } else {
+                // Show normal info
+                frontName.textContent = card.species;
+                frontSet.textContent = `Set #${card.set}`;
+            }
+            
+            // Handle replay button visibility
+            const replayButton = document.getElementById('replay-button');
+            if (currentMode === 'cries' || currentMode === 'both') {
+                replayButton.classList.remove('hidden');
+            } else {
+                replayButton.classList.add('hidden');
+            }
             
             // Reset Pokemon image while loading
             const pokemonImage = document.getElementById('pokemon-image');
             pokemonImage.classList.add('hidden');
             
-            // Load Pokemon image asynchronously (non-blocking)
+            // Load appropriate image based on mode and state
             if (pokemonZip) {
-                loadPokemonImageForCurrentCard();
+                loadCurrentCardImage();
             }
 
             // Update back with moves and type icons immediately
+            updateMovesDisplay(card);
+
+            // Auto-play cry for cries and both modes
+            if ((currentMode === 'cries' || currentMode === 'both') && cardState === 'initial') {
+                playCry(card.species);
+            }
+        }
+
+        function updateMovesDisplay(card) {
             const movesList = document.getElementById('back-moves');
             movesList.innerHTML = '';
             card.moves.forEach(move => {
@@ -742,8 +1327,41 @@
             }
         }
 
+        function handleCardClick() {
+            const card = filteredFlashcards[currentCardIndex];
+            
+            if (currentMode === 'moves') {
+                // Original behavior - just flip to moves
+                flipCard();
+            } else if (currentMode === 'cries') {
+                if (cardState === 'initial') {
+                    // Show sprite and reveal name (but no set number for cries only)
+                    cardState = 'sprite';
+                    document.getElementById('front-name').textContent = card.species;
+                    document.getElementById('front-set').textContent = ''; // No set for cries only
+                    loadPokemonSpriteForCurrentCard();
+                }
+                // Don't flip to moves in cries-only mode
+            } else if (currentMode === 'both') {
+                if (cardState === 'initial') {
+                    // Show sprite and reveal name/set (same as moves mode)
+                    cardState = 'sprite';
+                    document.getElementById('front-name').textContent = card.species;
+                    document.getElementById('front-set').textContent = `Set #${card.set}`;
+                    loadPokemonSpriteForCurrentCard();
+                } else if (cardState === 'sprite' || cardState === 'moves') {
+                    // Now behave like moves mode - flip back and forth between sprite and moves
+                    flipCard();
+                    // Update state based on current card face
+                    const flashcard = document.getElementById('flashcard');
+                    cardState = flashcard.classList.contains('flipped') ? 'moves' : 'sprite';
+                }
+            }
+        }
+
         function flipCard() {
             document.getElementById('flashcard').classList.toggle('flipped');
+            // State management is now handled in handleCardClick for consistency
         }
 
         function nextCard() {
@@ -752,7 +1370,7 @@
                 setTimeout(() => {
                     currentCardIndex++;
                     displayCard(currentCardIndex);
-                }, 50); // Even faster transition
+                }, 50);
             }
         }
 
@@ -762,7 +1380,7 @@
                 setTimeout(() => {
                     currentCardIndex--;
                     displayCard(currentCardIndex);
-                }, 50); // Even faster transition
+                }, 50);
             }
         }
 
